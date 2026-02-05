@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #161616;
+  --color-foreground: #ffe4e1;
+  --color-muted-foreground: #8d7b79;
+
+  --color-primary: #ef893c;
+  --color-primary-foreground:#452918;
+  --color-border: #2b2624;
+
+  --color-card: #7cc3bd;
+  --radius: 0.75rem;
+  --color-surface: #1e1d1c;
+
+}
+
+@layer base {
+   html {
+    scroll-behavior: smooth;
+   }
+
+   body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Inter", sans-serif;
+   }
+
+   font-serif {
+    font-family: "Playfair Display", serif;
+   }
+}
+
+/* CSS classes */
+@layer components {
+  .glass {
+    background-color: color-mix(in srgb, var(--color-surface) 50%, transparent);
+    backdrop-filter: blur(16px);
+    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  }
+
+  .glass-strong {
+    background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
+    backdrop-filter: blur(26px);
+    border: 2px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  }
+}
+
+/* Specs of Dust Animation */
+
+@layer utilities {
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+      
+    }
+  }
+}
+
+@keyframes slow-drift {
+  0%,
+  100% {
+    transform: translate(0px, 0px);
+ }
+  30% {
+    transform: translate(20px, -30px);
+ }
+ 60% {
+    transform: translate(-15px, -20px);
+ }
+ 75% {
+    transform: translate(30px, 10px);
+ }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out both;
+}
