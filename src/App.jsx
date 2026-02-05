@@ -1,4 +1,5 @@
 import { Navbar } from "@/layout/Navbar";
+import { Footer } from "@/layout/Footer";
 import { Hero } from "@/sections/Hero"; // @ means source folder, no need for dots .../section etc
 import { About } from "@/sections/About";
 import { Features } from "@/sections/Features";
@@ -16,6 +17,7 @@ function App() {
         <Login />
         <Contact />
       </main>
+      <Footer />
     </div>
  ); 
 }

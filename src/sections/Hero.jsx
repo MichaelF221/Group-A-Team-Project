@@ -39,7 +39,7 @@ export const Hero = () => {
                 </h1>
             </div>
            </div>
-
+           <footer />
     </section> 
  );
 };
