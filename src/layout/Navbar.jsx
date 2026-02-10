@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Login } from "@/components/LoginButton";
+import { CreateAccount } from "@/components/CreateAccountButton";
 import { Menu } from "lucide-react";
 
 const navLinks = [
@@ -29,7 +30,8 @@ export const Navbar = () => {
           </div>
         </div>
              {/* Call to Action Button */}
-             <div className="hidden md:block">
+             <div className="hidden md:flex items-center gap-3">
+               <CreateAccount size="sm">Create Account</CreateAccount>
                <Login size="sm">Login</Login>
              </div>
 
@@ -54,6 +56,9 @@ export const Navbar = () => {
                   {link.label}
                 </a>
               ))} 
+
+              </div><div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount>
 
             <Login size="md">Login</Login>
           </div>
