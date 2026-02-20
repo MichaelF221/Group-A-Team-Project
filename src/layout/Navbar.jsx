@@ -10,7 +10,7 @@ const navLinks = [
   { href: "#contact", label: "Contact" },
   { href: "/kanban", label: "Kanban" },
 ];
-
+ // Test 123
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
