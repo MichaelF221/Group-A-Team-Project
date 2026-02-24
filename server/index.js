@@ -28,8 +28,6 @@ connectDB()
     process.exit(1);
   });
 
-  import mongoose from "mongoose";
-
 // Simple Assignment model (put near top, after connectDB)
 const AssignmentSchema = new mongoose.Schema({
   title: { type: String, required: true },

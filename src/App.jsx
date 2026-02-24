@@ -1,25 +1,36 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from "@/layout/Navbar";
 import { Footer } from "@/layout/Footer";
-import { Hero } from "@/sections/Hero"; // @ means source folder, no need for dots .../section etc
+import { Hero } from "@/sections/Hero";
 import { About } from "@/sections/About";
 import { Features } from "@/sections/Features";
-import { Login } from "@/sections/Login";
 import { Contact } from "@/sections/Contact";
+import { CreateAccount } from "@/sections/CreateAccount";
+import { Login } from "@/sections/Login";
 
 function App() {
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <Features />
-        <Login />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
- ); 
+    <Router>
+      <div className="min-h-screen overflow-x-hidden">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={
+              <>
+                <Hero />
+                <About />
+                <Features />
+                <Contact />
+              </>
+            } />
+            <Route path="/create-account" element={<CreateAccount />} />
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
+  ); 
 }
 
 export default App;
