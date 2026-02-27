@@ -18,7 +18,6 @@ export const Login = () => {
                 type="email"
                 id="email"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="you@example.com"
                 required
               />
             </div>
@@ -29,7 +28,6 @@ export const Login = () => {
                 type="password"
                 id="password"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="••••••••"
                 required
               />
             </div>

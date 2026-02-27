@@ -18,7 +18,6 @@ export const CreateAccount = () => {
                 type="text"
                 id="fullName"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="John Doe"
                 required
               />
             </div>
@@ -29,7 +28,6 @@ export const CreateAccount = () => {
                 type="email"
                 id="email"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="you@example.com"
                 required
               />
             </div>
@@ -40,7 +38,6 @@ export const CreateAccount = () => {
                 type="password"
                 id="password"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="••••••••"
                 required
               />
             </div>
@@ -51,7 +48,6 @@ export const CreateAccount = () => {
                 type="password"
                 id="confirmPassword"
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                placeholder="••••••••"
                 required
               />
             </div>
