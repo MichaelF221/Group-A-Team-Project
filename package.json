@@ -15,8 +15,12 @@
     "mongodb": "^7.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+<<<<<<< HEAD
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
+=======
+    "react-router-dom": "^7.13.0",
+>>>>>>> 8787b2ba7bf7402aafa473bdb1bd620b633e4fa3
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {

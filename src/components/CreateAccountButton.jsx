@@ -1,6 +1,6 @@
 // Change the export name from Login to CreateAccount
 export const CreateAccount = ({ className = "", size = "md", children }) => {
-    const baseClasses = "bg-blue-600 focus-visible:ring-2 focus:outline-none focus-visible:ring-blue-400 rounded-full relative overflow-hidden font-medium hover:bg-blue-700 shadow-lg shadow-blue-400/40"
+    const baseClasses = "bg-primary focus-visible:ring- focus:outline-none focus-visible:ring-2 rounded-full relative overflow-hidden font-medium hover:bg-primary/80 shadow-lg shadow-primary/40"
     
     const sizeClasses = {
       sm: "px-4 py-2 text-sm",
