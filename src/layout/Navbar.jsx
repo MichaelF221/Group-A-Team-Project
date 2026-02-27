@@ -60,6 +60,12 @@ export const Navbar = () => {
               ))}
 
               <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount> 
+
+              </div><div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount>
+
+              <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
                 <CreateAccount size="md">Create Account</CreateAccount>
                 <Login size="md">Login</Login>
               </div>
