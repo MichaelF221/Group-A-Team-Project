@@ -10,7 +10,6 @@ const navLinks = [
   { href: "#contact", label: "Contact" },
   { href: "/kanban", label: "Kanban" },
 ];
- // Test 123
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
@@ -52,19 +51,28 @@ export const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden glass-strong">
           <div className="container mx-auto px-6 py-6 flex flex-col gap-3">
-              {navLinks.map((link) => (
-                <a href={link.href} key={link.href} className="text-lg text-muted-foreground hover:text-foreground px-4 py-2 rounded-full hover:bg-primary"
-                >
-                  {link.label}
-                </a>
-              ))}
+            {navLinks.map((link) => (
+              <a
+                href={link.href}
+                key={link.href}
+                className="text-lg text-muted-foreground hover:text-foreground px-4 py-2 rounded-full hover:bg-primary"
+              >
+                {link.label}
+              </a>
+            ))}
+
+              <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount> 
+
+              </div><div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount>
 
               <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
                 <CreateAccount size="md">Create Account</CreateAccount>
                 <Login size="md">Login</Login>
               </div>
-          </div>
         </div>
+      </div>
       )}
     </header>
   );
