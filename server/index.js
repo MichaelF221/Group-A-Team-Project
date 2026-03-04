@@ -1,7 +1,15 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import "dotenv/config";
+import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 app.use(cors());
@@ -19,15 +27,6 @@ app.get("/health", (req, res) => {
   res.json({ ok: true, message: "API is healthy" });
 });
 
-connectDB()
-  .then(() => {
-    app.listen(3001, () => console.log("✅ Server running on http://localhost:3001"));
-  })
-  .catch((err) => {
-    console.error("❌ Failed to start server:", err.message);
-    process.exit(1);
-  });
-
 // Simple Assignment model (put near top, after connectDB)
 const AssignmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -36,6 +35,113 @@ const AssignmentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Assignment = mongoose.model("Assignment", AssignmentSchema);
+
+const UserSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    passwordHash: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
+const User = mongoose.model("User", UserSchema);
+
+function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, passwordHash) {
+  const [salt, hash] = passwordHash.split(":");
+  if (!salt || !hash) return false;
+
+  const storedHashBuffer = Buffer.from(hash, "hex");
+  const incomingHashBuffer = scryptSync(password, salt, 64);
+
+  if (storedHashBuffer.length !== incomingHashBuffer.length) return false;
+  return timingSafeEqual(storedHashBuffer, incomingHashBuffer);
+}
+
+function createSimpleToken(userId) {
+  return Buffer.from(`${userId}:${Date.now()}:${randomBytes(8).toString("hex")}`).toString("base64url");
+}
+
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "Full name, email and password are required." });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters." });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser) {
+      return res.status(409).json({ message: "An account with this email already exists." });
+    }
+
+    const user = await User.create({
+      fullName: String(fullName).trim(),
+      email: cleanEmail,
+      passwordHash: hashPassword(password),
+    });
+
+    const token = createSimpleToken(user._id.toString());
+    return res.status(201).json({
+      message: "Account created successfully.",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Register error:", error.message);
+    return res.status(500).json({ message: "Failed to create account." });
+  }
+});
+
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const validPassword = verifyPassword(password, user.passwordHash);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const token = createSimpleToken(user._id.toString());
+    return res.json({
+      message: "Login successful.",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error.message);
+    return res.status(500).json({ message: "Failed to log in." });
+  }
+});
 
 // Create assignment
 app.post("/assignments", async (req, res) => {
@@ -48,3 +154,22 @@ app.get("/assignments", async (req, res) => {
   const assignments = await Assignment.find().sort({ dueDate: 1 });
   res.json(assignments);
 });
+
+const clientDistPath = path.join(__dirname, "..", "dist");
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
+const port = Number(process.env.PORT) || 3001;
+
+connectDB()
+  .then(() => {
+    app.listen(port, () => console.log(`✅ Server running on http://localhost:${port}`));
+  })
+  .catch((err) => {
+    console.error("❌ Failed to start server:", err.message);
+    process.exit(1);
+  });

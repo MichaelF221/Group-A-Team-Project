@@ -1,7 +1,42 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 export const Login = () => {
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted');
+
+    setErrorMessage("");
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setErrorMessage(data.message || "Login failed.");
+        return;
+      }
+
+      localStorage.setItem("studyflow_token", data.token);
+      localStorage.setItem("studyflow_user", JSON.stringify(data.user));
+      navigate("/kanban");
+    } catch (error) {
+      setErrorMessage("Server connection failed.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -17,6 +52,8 @@ export const Login = () => {
               <input
                 type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
                 required
               />
@@ -27,6 +64,8 @@ export const Login = () => {
               <input
                 type="password"
                 id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
                 required
               />
@@ -44,16 +83,21 @@ export const Login = () => {
               </a>
             </div>
 
+            {errorMessage && (
+              <p className="text-sm text-red-500">{errorMessage}</p>
+            )}
+
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition"
             >
-              Log In
+              {isLoading ? "Logging In..." : "Log In"}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <a href="/create-account" className="text-primary hover:underline">Create account</a>
+              <Link to="/create-account" className="text-primary hover:underline">Create account</Link>
             </p>
           </form>
         </div>
