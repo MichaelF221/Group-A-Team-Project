@@ -51,22 +51,22 @@ export const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden glass-strong">
           <div className="container mx-auto px-6 py-6 flex flex-col gap-3">
-            {navLinks.map((link) => (
-              <a
-                href={link.href}
-                key={link.href}
-                className="text-lg text-muted-foreground hover:text-foreground px-4 py-2 rounded-full hover:bg-primary"
-              >
-                {link.label}
-              </a>
-            ))}
+          {navLinks.map((link) => (
+            <a
+              href={link.href}
+              key={link.href}
+              className="text-lg text-muted-foreground hover:text-foreground px-4 py-2 rounded-full hover:bg-primary"
+            >
+              {link.label}
+            </a>
+          ))}
 
-            <div className="flex flex-col gap-3 mt-3"> {/* Action buttons */}
-              <CreateAccount size="md">Create Account</CreateAccount>
-              <Login size="md">Login</Login>
-            </div>
+          <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
+            <CreateAccount size="md">Create Account</CreateAccount>
+            <Login size="md">Login</Login>
           </div>
         </div>
+      </div>
       )}
     </header>
   );
