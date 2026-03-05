@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Login } from "@/components/LoginButton";
 import { CreateAccount } from "@/components/CreateAccountButton";
-import { Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Circle, LogOut, Menu, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navLinks = [
   { href: "#about", label: "About" },
@@ -12,6 +12,39 @@ const navLinks = [
 ];
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem("studyflow_token")));
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      setIsLoggedIn(Boolean(localStorage.getItem("studyflow_token")));
+    };
+
+    window.addEventListener("storage", syncAuthState);
+    window.addEventListener("auth-changed", syncAuthState);
+
+    return () => {
+      window.removeEventListener("storage", syncAuthState);
+      window.removeEventListener("auth-changed", syncAuthState);
+    };
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("studyflow_token");
+    localStorage.removeItem("studyflow_user");
+    setIsLoggedIn(false);
+    window.dispatchEvent(new Event("auth-changed"));
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate("/");
+  };
+
   return (
     <header className="fixed right-0 left-0 top-0 bg-transparent py-5 glass-strong z-50">
       <nav className="container mx-auto px-6 flex items-center justify-between">
@@ -32,8 +65,40 @@ export const Navbar = () => {
         </div>
              {/* Call to Action Button */}
              <div className="hidden md:flex items-center gap-3">
-               <CreateAccount size="sm">Create Account</CreateAccount>
-               <Login size="sm">Login</Login>
+               {!isLoggedIn ? (
+                 <>
+                   <CreateAccount size="sm">Create Account</CreateAccount>
+                   <Login size="sm">Login</Login>
+                 </>
+               ) : (
+                 <>
+                   <div className="flex items-center gap-2 text-sm text-foreground px-3 py-2 rounded-full glass">
+                     <Circle size={10} className="text-green-500 fill-green-500" />
+                     <span>You're logged in</span>
+                   </div>
+                   <div className="relative">
+                     <button
+                       className="p-2 rounded-full glass hover:bg-primary/20 transition cursor-pointer"
+                       onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                       aria-expanded={isUserMenuOpen}
+                       aria-label="Open user menu"
+                     >
+                       <User size={18} />
+                     </button>
+                     {isUserMenuOpen && (
+                       <div className="absolute right-0 mt-2 w-36 rounded-lg glass-strong border border-border p-2">
+                         <button
+                           onClick={handleSignOut}
+                           className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-primary/20 transition text-left"
+                         >
+                           <LogOut size={16} />
+                           <span>Sign out</span>
+                         </button>
+                       </div>
+                     )}
+                   </div>
+                 </>
+               )}
              </div>
 
           {/* Mobile Hamburger Menu */}
@@ -62,8 +127,26 @@ export const Navbar = () => {
           ))}
 
           <div className="flex flex-col gap-3 mt-3"> {/* Add wrapper for spacing */}
-            <CreateAccount size="md">Create Account</CreateAccount>
-            <Login size="md">Login</Login>
+            {!isLoggedIn ? (
+              <>
+                <CreateAccount size="md">Create Account</CreateAccount>
+                <Login size="md">Login</Login>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-sm text-foreground px-4 py-2 rounded-full glass w-fit">
+                  <Circle size={10} className="text-green-500 fill-green-500" />
+                  <span>You're logged in</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-primary/20 transition"
+                >
+                  <LogOut size={16} />
+                  <span>Sign out</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
