@@ -5,10 +5,11 @@ import { Circle, LogOut, Menu, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navLinks = [
-  { href: "#about", label: "About" },
+  { href: "/about", label: "About" },
   { href: "#features", label: "Features" },
   { href: "#contact", label: "Contact" },
   { href: "/kanban", label: "Kanban" },
+  { href: "/chatbot", label: "Chatbot" },
 ];
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
