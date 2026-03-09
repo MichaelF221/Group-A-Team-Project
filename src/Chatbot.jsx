@@ -1,7 +1,16 @@
+/** 
+ * @file Chatbot.jsx
+ * @description AI Chatbot component supporting multiple models
+ * @author Tony Nicoletti
+ * @date 06/05/2026
+ * @version 1.0
+ * 
+ * **/
 
+// Imports reacts useState hook to manage component state
 import { useState } from "react";
 
-
+// Hardcoded list of AI models users can choose from
 function Chatbot() {
     const models = [
         "gpt-oss:120b-cloud",
@@ -9,19 +18,27 @@ function Chatbot() {
         "deepseek-v3.1:671b-cloud",
     ];
 
+    // Tracks which AI model the user has selected
     const [model, setModel]= useState("")
+    // Tracks what the user is typing in the input box
     const [text, setText] = useState("")
+    // Stores the response returned from the AI to display on screen
     const [response, setResponse] = useState("")
 
+    // async function triggered when the user clicks "Send"
     const send = async () => {
+      // Logs the current model and text to the console for debugging
        console.log("clicked!", model, text)
+       // Sends a POST request to the backend with the selected model and user's text
       const res = await fetch("http://localhost:3000/chat", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({model, text})
+        headers: {"Content-Type": "application/json"}, // Tells the server we are sending JSON
+        body: JSON.stringify({model, text}) // Converts model text to a JSON string
       })
 
+      // Parses the backends JSON response into a JavaScript object
       const data = await res.json()
+      // Extracts the AI's message content and stores it in state, falls back to empty string if missing
       setResponse(data.message?.content || "")
     };
 
@@ -32,7 +49,7 @@ function Chatbot() {
       <div className="bg-zinc-800 text-primary rounded-2xl shadow-lg p-6 w-full max-w-md">
       
       <div className="flex items-center gap-4 mb-4">
-        <img src="public/images/chatbot_BG.png" alt="chatbot" className="w-32 h- mb-6"/>
+        <img src="/images/chatbot_BG.png" alt="chatbot" className="w-32 h- mb-6"/>
         <h2 className="text-xl font-bold mb-0 text-center">Welcome to Chatbot!</h2>
       </div>
       <h2 className="text-xl font-bold mb-10 text-center">Ask me anything</h2>
@@ -57,4 +74,17 @@ function Chatbot() {
     );
 }
 
+// Exports the component so it can be used in other parts of the app
 export default Chatbot;
+
+
+// Algorithm .map()
+// {models.map((m) => (
+//     <option key={m} value={m}>
+//         {m}
+//     </option>
+// ))}
+// .map goes through every item in the models array one-by-one. 
+// For each item calledm it creates and returns an <option> element.
+// So if there are three models in the array, you get three <options> 
+// elements back. React renders all three in the dropdown.

@@ -19,16 +19,13 @@ function App() {
         <Route path="/" element={
           <main>
             <Hero />
-            <About />
-            <Features />
-            <Contact />
-            {/* <Chatbot/> */}
           </main>
         } />
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/kanban" element={<Kanban />} />
         <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/about" element={<About />}/>
       </Routes>
       <Footer />
     </div>
