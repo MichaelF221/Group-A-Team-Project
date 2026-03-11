@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Login } from "@/components/LoginButton";
 import { CreateAccount } from "@/components/CreateAccountButton";
-import { Circle, LogOut, Menu, User } from "lucide-react";
+import { Circle, LogOut, Menu, Settings, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navLinks = [
@@ -88,6 +88,14 @@ export const Navbar = () => {
                      </button>
                      {isUserMenuOpen && (
                        <div className="absolute right-0 mt-2 w-36 rounded-lg glass-strong border border-border p-2">
+                         <Link
+                           to="/account"
+                           onClick={() => setIsUserMenuOpen(false)}
+                           className="mb-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-primary/20"
+                         >
+                           <Settings size={16} />
+                           <span>Account</span>
+                         </Link>
                          <button
                            onClick={handleSignOut}
                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-primary/20 transition text-left"
@@ -139,6 +147,14 @@ export const Navbar = () => {
                   <Circle size={10} className="text-green-500 fill-green-500" />
                   <span>You're logged in</span>
                 </div>
+                <Link
+                  to="/account"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-primary/20 transition"
+                >
+                  <Settings size={16} />
+                  <span>Account</span>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-primary/20 transition"
