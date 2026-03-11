@@ -23,34 +23,22 @@ io.on("connection", (socket) => {
 });
 
 app.post("/chat", async (req, res) => {
-  console.log("Request received!");
+  console.log("Request received!")
   const { model, text } = req.body;
-
-  try {
-    if (!text || !String(text).trim()) {
-      return res.status(400).json({ error: "Please enter a message first." });
-    }
-
-    const selectedModel = model || "llama3.2:latest";
-    const response = await fetch("http://localhost:11434/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [{ role: "user", content: text }],
-        stream: false,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(502).json({ error: data.error || "Ollama request failed." });
-    }
-
-    return res.json(data);
-  } catch (error) {
-    return res.status(500).json({ error: `Chat request failed: ${error.message}` });
-  }
+  const response = await fetch("http://localhost:11434/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: text }],
+      stream: false,
+    }),
+  });
+  const data = await response.json();
+  console.log("Ollama response", data)
+  res.json(data);
 });
 
 httpServer.listen(3000, () => console.log("Server running on http://localhost:3000"));

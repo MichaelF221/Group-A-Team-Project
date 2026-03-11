@@ -155,43 +155,6 @@ app.get("/assignments", async (req, res) => {
   res.json(assignments);
 });
 
-app.post("/chat", async (req, res) => {
-  const { model, text } = req.body;
-
-  if (!text || !String(text).trim()) {
-    return res.status(400).json({ error: "Please enter a message first." });
-  }
-
-  try {
-    const selectedModel = model || "llama3.2:latest";
-    const response = await fetch("http://localhost:11434/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [{ role: "user", content: text }],
-        stream: false,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(502).json({ error: data.error || "Ollama request failed." });
-    }
-
-    if (!data.message?.content) {
-      return res.status(502).json({ error: "Ollama returned no message content." });
-    }
-
-    return res.json(data);
-  } catch (error) {
-    return res.status(500).json({
-      error: "Chat request failed. Make sure Ollama is running on localhost:11434.",
-      details: error.message,
-    });
-  }
-});
-
 const clientDistPath = path.join(__dirname, "..", "dist");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
