@@ -8,6 +8,7 @@ import { Login } from "@/sections/Login";
 import Chatbot from "./Chatbot"; 
 import { CreateAccount } from "@/sections/CreateAccount";
 import Kanban from "@/sections/Kanban";
+import Account from "@/sections/Account";
 import { Routes, Route } from "react-router-dom";
 // import { useState } from "react";
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/kanban" element={<Kanban />} />
         <Route path="/chatbot" element={<Chatbot />} />
         <Route path="/about" element={<About />}/>
+        <Route path="/account" element={<Account />} />
       </Routes>
       <Footer />
     </div>
