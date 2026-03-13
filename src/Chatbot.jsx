@@ -13,31 +13,29 @@ import { useState } from "react";
 // Hardcoded list of AI models users can choose from
 function Chatbot() {
     const models = [
-        "gpt-oss:120b-cloud",
-        "gemini-3-flash-preview:cloud",
-        "deepseek-v3.1:671b-cloud",
+        "llama3.2",
+        // "gemini-3-flash-preview:cloud",
+        // "deepseek-v3.1:671b-cloud",
     ];
 
     // Tracks which AI model the user has selected
-    const [model, setModel]= useState("")
+    const [model, setModel]= useState("llama3.2")
     // Tracks what the user is typing in the input box
     const [text, setText] = useState("")
     // Stores the response returned from the AI to display on screen
     const [response, setResponse] = useState("")
+    const[loading, setLoading] = useState(false);
 
     // async function triggered when the user clicks "Send"
     const send = async () => {
       // Logs the current model and text to the console for debugging
-       console.log("clicked!", model, text)
-       // Sends a POST request to the backend with the selected model and user's text
+       console.log("clicked!", model, text) // Sends a POST request to the backend with the selected model and user's text
       const res = await fetch("http://localhost:3000/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"}, // Tells the server we are sending JSON
-        body: JSON.stringify({model, text}) // Converts model text to a JSON string
+        body: JSON.stringify({ model, text })
       })
-
-      // Parses the backends JSON response into a JavaScript object
-      const data = await res.json()
+      const data = await res.json()// Parses the backends JSON response into a JavaScript object
       // Extracts the AI's message content and stores it in state, falls back to empty string if missing
       setResponse(data.message?.content || "")
     };
