@@ -4,74 +4,507 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <title>Fullstack Chat</title>
+    <title>Study Flow Chat</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Adding a little basic styling since we're here */
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 8px; margin-bottom: 5px; background: #f4f4f4; border-radius: 4px; }
-        #chat-container { max-width: 600px; margin: 20px auto; }
-        #chat-form { display: flex; margin-top: 10px; }
-        #message-input { flex-grow: 1; padding: 10px; }
-        button { padding: 10px 20px; cursor: pointer; }
+        :root {
+            --background: #161616;
+            --foreground: #ffe4e1;
+            --muted-foreground: #8d7b79;
+            --primary: #ef893c;
+            --primary-foreground: #452918;
+            --border: #2b2624;
+            --surface: #1e1d1c;
+            --surface-strong: rgba(30, 29, 28, 0.86);
+            --surface-soft: rgba(30, 29, 28, 0.64);
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--foreground);
+            background:
+                linear-gradient(180deg, rgba(22, 22, 22, 0.5), rgba(22, 22, 22, 0.92)),
+                radial-gradient(circle at top left, rgba(239, 137, 60, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(124, 195, 189, 0.14), transparent 24%),
+                var(--background);
+            font-family: "Inter", sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url("public/images/orange-bg.png") center/cover no-repeat;
+            opacity: 0.16;
+            pointer-events: none;
+            transform: scale(1.04);
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(239, 137, 60, 0.2), transparent 10%),
+                radial-gradient(circle at 80% 18%, rgba(239, 137, 60, 0.14), transparent 9%),
+                radial-gradient(circle at 72% 75%, rgba(124, 195, 189, 0.12), transparent 11%);
+            filter: blur(10px);
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 18px;
+        }
+
+        .chat-layout {
+            width: min(1080px, 100%);
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .glass-panel {
+            border: 1px solid rgba(43, 38, 36, 0.72);
+            background: var(--surface-soft);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow);
+        }
+
+        .hero-card,
+        .chat-card {
+            border-radius: var(--radius);
+        }
+
+        .hero-card {
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            inset: auto -60px -80px auto;
+            width: 180px;
+            height: 180px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(239, 137, 60, 0.3), transparent 65%);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(239, 137, 60, 0.35);
+            color: var(--primary);
+            background: rgba(239, 137, 60, 0.08);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 18px rgba(239, 137, 60, 0.8);
+        }
+
+        .hero-card h1 {
+            margin: 22px 0 14px;
+            font-size: clamp(2.2rem, 4vw, 3.7rem);
+            line-height: 0.98;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-card h1 span {
+            color: var(--primary);
+        }
+
+        .hero-copy {
+            margin: 0;
+            max-width: 28ch;
+            color: var(--muted-foreground);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .hero-meta {
+            margin-top: 28px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .meta-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            color: var(--foreground);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .meta-pill small {
+            color: var(--muted-foreground);
+            font-size: 0.78rem;
+        }
+
+        .chat-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 76vh;
+            overflow: hidden;
+            background: var(--surface-strong);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .chat-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 1px solid rgba(239, 137, 60, 0.3);
+            box-shadow: 0 12px 30px rgba(239, 137, 60, 0.18);
+        }
+
+        .chat-title h2 {
+            margin: 0 0 4px;
+            font-size: 1.1rem;
+        }
+
+        .chat-title p,
+        .status {
+            margin: 0;
+            color: var(--muted-foreground);
+            font-size: 0.92rem;
+        }
+
+        .status strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        #messages {
+            list-style: none;
+            margin: 0;
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+        }
+
+        #messages li {
+            max-width: min(75%, 520px);
+            padding: 14px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--foreground);
+            line-height: 1.5;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+        }
+
+        #messages li.self {
+            align-self: flex-end;
+            color: #22140b;
+            background: linear-gradient(135deg, #ef893c, #f5a15e);
+            border-color: rgba(239, 137, 60, 0.6);
+        }
+
+        #messages li.system {
+            align-self: center;
+            max-width: 100%;
+            font-size: 0.92rem;
+            color: var(--muted-foreground);
+            text-align: center;
+            background: transparent;
+            border: 1px dashed rgba(141, 123, 121, 0.35);
+            box-shadow: none;
+        }
+
+        .message-author {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.85;
+        }
+
+        .self .message-author {
+            color: rgba(69, 41, 24, 0.78);
+        }
+
+        #chat-form {
+            display: flex;
+            gap: 14px;
+            padding: 18px 24px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: linear-gradient(180deg, rgba(30, 29, 28, 0.18), rgba(30, 29, 28, 0.66));
+        }
+
+        #message-input {
+            flex: 1;
+            min-width: 0;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            outline: none;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--foreground);
+            font-size: 0.98rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        #message-input::placeholder {
+            color: var(--muted-foreground);
+        }
+
+        #message-input:focus {
+            border-color: rgba(239, 137, 60, 0.58);
+            box-shadow: 0 0 0 4px rgba(239, 137, 60, 0.14);
+            transform: translateY(-1px);
+        }
+
+        button {
+            border: 0;
+            border-radius: 18px;
+            padding: 0 24px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            color: var(--primary-foreground);
+            background: linear-gradient(135deg, #ef893c, #f4a261);
+            box-shadow: 0 14px 30px rgba(239, 137, 60, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(239, 137, 60, 0.34);
+            filter: brightness(1.02);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        @media (max-width: 920px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-card {
+                order: 2;
+            }
+
+            .chat-card {
+                min-height: 70vh;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                padding: 18px 12px;
+            }
+
+            .hero-card,
+            .chat-card {
+                border-radius: 22px;
+            }
+
+            .chat-header,
+            #chat-form,
+            #messages {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .chat-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            #messages li {
+                max-width: 88%;
+            }
+
+            #chat-form {
+                flex-direction: column;
+            }
+
+            button {
+                min-height: 54px;
+            }
+        }
     </style>
 </head>
 <body>
+    <main class="page-shell">
+        <div class="chat-layout">
+            <aside class="hero-card glass-panel">
+                <div class="eyebrow">Study Flow Live Chat</div>
+                <h1>Study <span>Flow</span><br>for real-time team work.</h1>
+                <p class="hero-copy">
+                    A focused workspace for quick check-ins, planning nudges, and shared momentum without leaving the warm Study Flow look and feel.
+                </p>
+                <div class="hero-meta">
+                    <div class="meta-pill">
+                        <div>
+                            <strong>Room</strong><br>
+                            <small id="room-label">general-room</small>
+                        </div>
+                        <small>Live sync</small>
+                    </div>
+                    <div class="meta-pill">
+                        <div>
+                            <strong>Mode</strong><br>
+                            <small>Socket.IO on port 3000</small>
+                        </div>
+                        <small id="user-label">Connecting...</small>
+                    </div>
+                </div>
+            </aside>
 
-    <div id="chat-container">
-        <ul id="messages"></ul>
-        <form id="chat-form">
-            <input id="message-input" autocomplete="off" placeholder="Type a message..." />
-            <button>Send</button>
-        </form>
-    </div>
+            <section class="chat-card glass-panel">
+                <header class="chat-header">
+                    <div class="chat-title">
+                        <img class="chat-avatar" src="public/images/chatbot.png" alt="Study Flow chat avatar" />
+                        <div>
+                            <h2>Team Chat</h2>
+                            <p>Shared room for fast updates and study support</p>
+                        </div>
+                    </div>
+                    <p class="status" id="status-label"><strong>Connecting</strong> to chat server...</p>
+                </header>
+
+                <ul id="messages">
+                    <li class="system">Say hello to make sure the room is live.</li>
+                </ul>
+
+                <form id="chat-form">
+                    <input id="message-input" autocomplete="off" placeholder="Send a study update, question, or quick check-in..." />
+                    <button type="submit">Send</button>
+                </form>
+            </section>
+        </div>
+    </main>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        // 1. Connect to the server on port 3000 (Matches fixed server.js)
-        //    make sure the Node server is running separately (`node server.js` or
-        //    `npm run dev:server` from the root). Live Server cannot start the
-        //    backend, it only serves this static HTML file.
-        //    We use window.location.hostname so the page can work even if you
-        //    serve it from a different local port (e.g. Live Server at 5500).
-        const socket = io(`http://${window.location.hostname}:3000`);
+        const chatServerUrl = `http://${window.location.hostname}:3000`;
+        const socket = io(chatServerUrl);
 
-        const form = document.getElementById('chat-form');
-        const input = document.getElementById('message-input');
-        const messages = document.getElementById('messages');
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("message-input");
+        const messages = document.getElementById("messages");
+        const statusLabel = document.getElementById("status-label");
+        const userLabel = document.getElementById("user-label");
 
-        // 2. Define a room and a user (In a real app, these come from your login/URL)
         const currentRoom = "general-room";
         const currentUser = "User_" + Math.floor(Math.random() * 1000);
 
-        // log successful connection or failure
+        document.getElementById("room-label").textContent = currentRoom;
+        userLabel.textContent = currentUser;
+
+        function appendMessage(message, isSelf = false) {
+            const item = document.createElement("li");
+            item.className = isSelf ? "self" : "";
+
+            const author = document.createElement("span");
+            author.className = "message-author";
+            author.textContent = message.sender;
+
+            const body = document.createElement("span");
+            body.textContent = message.text;
+
+            item.appendChild(author);
+            item.appendChild(body);
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
         socket.on("connect", () => {
-            console.log("✅ Connected to chat server");
-            // 3. Join the room immediately on connect
+            statusLabel.innerHTML = `<strong>Connected</strong> to ${chatServerUrl}`;
             socket.emit("joinConversation", currentRoom);
         });
+
         socket.on("connect_error", (err) => {
-            console.error("⚠️ Socket connection error:", err.message);
-            alert("Unable to connect to chat server. Make sure it is running on port 3000.");
+            statusLabel.innerHTML = "<strong>Offline</strong> chat server unavailable";
+            console.error("Socket connection error:", err.message);
+            alert(`Unable to connect to chat server at ${chatServerUrl}. Make sure npm run dev:chat is running.`);
         });
 
-        form.addEventListener('submit', (e) => {
+        form.addEventListener("submit", (e) => {
             e.preventDefault();
-            if (input.value) {
-                // Sending the typed message to the server
-                socket.emit("message", input.value);
-                input.value = '';
+
+            const text = input.value.trim();
+            if (!text) {
+                return;
             }
+
+            socket.emit("sendMessage", {
+                conversationId: currentRoom,
+                sender: currentUser,
+                text,
+            });
+
+            input.value = "";
+            input.focus();
         });
 
-        // Listening for the server's response
-        socket.on("response", (data) => {
-            const item = document.createElement('li');
-            // Format: "User123: Hello world!"
-            item.textContent = `${message.sender}: ${message.text}`; 
-            messages.appendChild(item);
-            // Auto-scroll to bottom
-            window.scrollTo(0, document.body.scrollHeight);
+        socket.on("newMessage", (message) => {
+            const placeholder = messages.querySelector(".system");
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            appendMessage(message, message.sender === currentUser);
         });
     </script>
 </body>
