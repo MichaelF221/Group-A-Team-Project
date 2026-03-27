@@ -25,6 +25,7 @@ function App() {
         <Route path="/" element={
           <main>
             <Hero />
+            <Contact />
           </main>
         } />
         <Route path="/login" element={<Login />} />

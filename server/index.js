@@ -2,16 +2,26 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import Message from "./models/Message.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+  },
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -20,19 +30,50 @@ async function connectDB() {
   if (!uri) throw new Error("MONGODB_URI is missing in server/.env");
 
   await mongoose.connect(uri);
-  console.log("✅ MongoDB Atlas connected");
+  console.log("MongoDB Atlas connected");
 }
 
 app.get("/health", (req, res) => {
   res.json({ ok: true, message: "API is healthy" });
 });
 
-// Simple Assignment model (put near top, after connectDB)
-const AssignmentSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  dueDate: { type: Date, required: true },
-  status: { type: String, default: "todo" },
-}, { timestamps: true });
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("joinConversation", (conversationId) => {
+    socket.join(conversationId);
+    console.log(`User ${socket.id} joined room: ${conversationId}`);
+  });
+
+  socket.on("sendMessage", async (data) => {
+    const { conversationId, sender, text } = data;
+
+    try {
+      const message = await Message.create({
+        conversationId,
+        sender,
+        text,
+      });
+
+      io.to(conversationId).emit("newMessage", message);
+    } catch (error) {
+      console.error("Error saving message:", error.message);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+const AssignmentSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    dueDate: { type: Date, required: true },
+    status: { type: String, default: "todo" },
+  },
+  { timestamps: true }
+);
 
 const Assignment = mongoose.model("Assignment", AssignmentSchema);
 
@@ -143,13 +184,11 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-// Create assignment
 app.post("/assignments", async (req, res) => {
   const assignment = await Assignment.create(req.body);
   res.status(201).json(assignment);
 });
 
-// Get all assignments
 app.get("/assignments", async (req, res) => {
   const assignments = await Assignment.find().sort({ dueDate: 1 });
   res.json(assignments);
@@ -187,26 +226,33 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+app.delete("/assigment/:id", async (req, res) => {
+  await Assignment.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted " });
+});
+
 const clientDistPath = path.join(__dirname, "..", "dist");
+const chatHtmlPath = path.join(__dirname, "..", "chat.html");
+
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
+
+  app.get("/chat.html", (req, res) => {
+    res.sendFile(chatHtmlPath);
+  });
+
   app.get("*", (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
 
-app.delete("/assigment/:id", async (req, res) => {
-  await Assignment.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted "});
-});
-
 const port = Number(process.env.PORT) || 3001;
 
 connectDB()
   .then(() => {
-    app.listen(port, () => console.log(`✅ Server running on http://localhost:${port}`));
+    httpServer.listen(port, () => console.log(`Server running on http://localhost:${port}`));
   })
   .catch((err) => {
-    console.error("❌ Failed to start server:", err.message);
+    console.error("Failed to start server:", err.message);
     process.exit(1);
   });

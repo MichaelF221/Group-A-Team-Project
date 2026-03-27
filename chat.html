@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <title>Study Flow Chat</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --background: #161616;
@@ -47,7 +46,7 @@
             content: "";
             position: fixed;
             inset: 0;
-            background: url("public/images/orange-bg.png") center/cover no-repeat;
+            background: url("/images/orange-bg.png") center/cover no-repeat;
             opacity: 0.16;
             pointer-events: none;
             transform: scale(1.04);
@@ -382,6 +381,40 @@
                 min-height: 54px;
             }
         }
+
+        body.embedded {
+            min-height: auto;
+            background:
+                linear-gradient(180deg, rgba(22, 22, 22, 0.45), rgba(22, 22, 22, 0.78)),
+                var(--background);
+        }
+
+        body.embedded::before,
+        body.embedded::after {
+            display: none;
+        }
+
+        body.embedded .page-shell {
+            min-height: auto;
+            padding: 0;
+        }
+
+        body.embedded .chat-layout {
+            width: 100%;
+            gap: 0;
+            grid-template-columns: 1fr;
+        }
+
+        body.embedded .hero-card {
+            display: none;
+        }
+
+        body.embedded .chat-card {
+            min-height: 780px;
+            border-radius: 0;
+            box-shadow: none;
+            border: 0;
+        }
     </style>
 </head>
 <body>
@@ -404,7 +437,7 @@
                     <div class="meta-pill">
                         <div>
                             <strong>Mode</strong><br>
-                            <small>Socket.IO on port 3000</small>
+                            <small>Socket.IO on the same server</small>
                         </div>
                         <small id="user-label">Connecting...</small>
                     </div>
@@ -414,7 +447,7 @@
             <section class="chat-card glass-panel">
                 <header class="chat-header">
                     <div class="chat-title">
-                        <img class="chat-avatar" src="public/images/chatbot.png" alt="Study Flow chat avatar" />
+                        <img class="chat-avatar" src="/images/chatbot.png" alt="Study Flow chat avatar" />
                         <div>
                             <h2>Team Chat</h2>
                             <p>Shared room for fast updates and study support</p>
@@ -437,7 +470,11 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        const chatServerUrl = `http://${window.location.hostname}:3000`;
+        if (window.self !== window.top) {
+            document.body.classList.add("embedded");
+        }
+
+        const chatServerUrl = window.location.origin;
         const socket = io(chatServerUrl);
 
         const form = document.getElementById("chat-form");
@@ -477,7 +514,7 @@
         socket.on("connect_error", (err) => {
             statusLabel.innerHTML = "<strong>Offline</strong> chat server unavailable";
             console.error("Socket connection error:", err.message);
-            alert(`Unable to connect to chat server at ${chatServerUrl}. Make sure npm run dev:chat is running.`);
+            alert(`Unable to connect to chat server at ${chatServerUrl}. Make sure npm run one-link or the active server is running.`);
         });
 
         form.addEventListener("submit", (e) => {
