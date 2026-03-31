@@ -13,6 +13,7 @@ const navLinks = [
 const protectedNavLinks = [
   { href: "/kanban", label: "Kanban" },
   { href: "/chatbot", label: "Chatbot" },
+  { href: "/quiz", label: "Quiz Generator" },
 ];
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

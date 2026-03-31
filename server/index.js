@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Fixed import syntax
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,9 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -27,7 +31,7 @@ app.get("/health", (req, res) => {
   res.json({ ok: true, message: "API is healthy" });
 });
 
-// Simple Assignment model (put near top, after connectDB)
+// Simple Assignment model
 const AssignmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
   dueDate: { type: Date, required: true },
@@ -68,7 +72,7 @@ function createSimpleToken(userId) {
   return Buffer.from(`${userId}:${Date.now()}:${randomBytes(8).toString("hex")}`).toString("base64url");
 }
 
-app.post("/auth/register", async (req, res) => {
+app.post("/api/auth/register", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
@@ -108,7 +112,7 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-app.post("/auth/login", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -144,18 +148,23 @@ app.post("/auth/login", async (req, res) => {
 });
 
 // Create assignment
-app.post("/assignments", async (req, res) => {
+app.post("/api/assignments", async (req, res) => {
   const assignment = await Assignment.create(req.body);
   res.status(201).json(assignment);
 });
 
 // Get all assignments
-app.get("/assignments", async (req, res) => {
+app.get("/api/assignments", async (req, res) => {
   const assignments = await Assignment.find().sort({ dueDate: 1 });
   res.json(assignments);
 });
 
-app.post("/chat", async (req, res) => {
+app.delete("/assignment/:id", async (req, res) => { // Fixed typo: assigment -> assignment
+  await Assignment.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
+});
+
+app.post("/api/chat", async (req, res) => {
   const { model, text } = req.body;
 
   if (!text || !String(text).trim()) {
@@ -187,6 +196,111 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+// QUIZ GENERATION ENDPOINT - NEW
+app.post("/api/generate-quiz", async (req, res) => {
+  try {
+    const { topic, numQuestions, difficulty, questionType } = req.body;
+    
+    console.log(`Generating quiz: ${topic}, ${numQuestions} questions, ${difficulty} difficulty`);
+    
+    // Validate input
+    if (!topic || !topic.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Topic is required" 
+      });
+    }
+    
+    if (numQuestions < 1 || numQuestions > 50) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Number of questions must be between 1 and 50" 
+      });
+    }
+    
+    // Get the model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}". 
+    
+    Return the response as a valid JSON array with exactly ${numQuestions} questions using this structure:
+    [
+      {
+        "id": 1,
+        "question": "Question text",
+        "options": ["option1", "option2", "option3", "option4"],
+        "correctAnswer": "correct option text (must match exactly one of the options)",
+        "explanation": "Brief explanation of why this answer is correct"
+      }
+    ]
+    
+    Important rules:
+    - Make questions educational, accurate, and appropriate for ${difficulty} difficulty level
+    - ${difficulty} difficulty means: easy = basic concepts, medium = intermediate understanding, hard = advanced/complex topics
+    - Always provide exactly 4 options for each question
+    - The correctAnswer must exactly match one of the options text
+    - Make sure questions are varied and cover different aspects of "${topic}"
+    - Return ONLY the JSON array, no other text, no markdown formatting`;
+    
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    // Clean and parse the response
+    let cleanedResponse = response.trim();
+    
+    // Remove any markdown code blocks if present
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/```json\n?/, '').replace(/```\n?$/, '');
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/```\n?/, '').replace(/```\n?$/, '');
+    }
+    
+    let questions;
+    try {
+      questions = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error('Failed to parse response:', cleanedResponse);
+      throw new Error('Invalid response format from Gemini');
+    }
+    
+    // Validate the response
+    if (!Array.isArray(questions)) {
+      throw new Error('Response is not an array');
+    }
+    
+    if (questions.length !== numQuestions) {
+      console.warn(`Expected ${numQuestions} questions, got ${questions.length}. Adjusting...`);
+      // Trim or pad as needed
+      if (questions.length > numQuestions) {
+        questions = questions.slice(0, numQuestions);
+      }
+    }
+    
+    // Ensure each question has required fields
+    const validatedQuestions = questions.map((q, index) => ({
+      id: index + 1,
+      question: q.question || `Question ${index + 1}`,
+      options: q.options && q.options.length === 4 ? q.options : ["Option 1", "Option 2", "Option 3", "Option 4"],
+      correctAnswer: q.correctAnswer || q.options?.[0] || "Option 1",
+      explanation: q.explanation || "No explanation provided"
+    }));
+    
+    res.json({ success: true, questions: validatedQuestions });
+    
+  } catch (error) {
+    console.error('Error generating quiz:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to generate quiz. Please try again.'
+    });
+  }
+});
+
+// Test endpoint for quiz API
+app.get("/api/quiz-test", (req, res) => {
+  res.json({ message: "Quiz API is working! Use POST /api/generate-quiz to generate quizzes." });
+});
+
 const clientDistPath = path.join(__dirname, "..", "dist");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
@@ -194,11 +308,6 @@ if (fs.existsSync(clientDistPath)) {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
-
-app.delete("/assigment/:id", async (req, res) => {
-  await Assignment.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted "});
-});
 
 const port = Number(process.env.PORT) || 3001;
 

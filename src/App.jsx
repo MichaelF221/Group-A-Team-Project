@@ -10,6 +10,7 @@ import { CreateAccount } from "@/sections/CreateAccount";
 import Kanban from "@/sections/Kanban";
 import Account from "@/sections/Account";
 import { Routes, Route, Navigate } from "react-router-dom";
+import QuizSection from './sections/QuizSection';
 // import { useState } from "react";
 
 function ProtectedRoute({ children }) {
@@ -54,6 +55,7 @@ function App() {
           }
         />
         <Route path="/about" element={<About />}/>
+        <Route path="/quiz" element={<QuizSection />} />
       </Routes>
       <Footer />
     </div>
