@@ -29,7 +29,7 @@ function Kanban(){
     const [draggedItem, setDraggedItem] = useState(null);
 
     useEffect(() => {
-      fetch("http://localhost:3001/assignments")
+      fetch("/api/assignments")
       .then(res => res.json())
       .then(data => {
         const updated = {
@@ -49,7 +49,7 @@ function Kanban(){
 
     const addNewTask = async () => {
   if(newTask.trim() === "") return;
-  const res = await fetch("http://localhost:3001/assignments", {
+  const res = await fetch("/api/assignments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title: newTask, status: activeColumns, dueDate: new Date() })

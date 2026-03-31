@@ -12,7 +12,7 @@ import { useState } from "react";
 
 // Hardcoded list of AI models users can choose from
 function Chatbot() {
-    const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+    const API_BASE = import.meta.env.VITE_API_URL || "/api";
     const models = [
         "llama3.2:latest",
         "llama3.2",

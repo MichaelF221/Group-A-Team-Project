@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 export const Login = () => {
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
