@@ -163,6 +163,11 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
+app.delete("/assigment/:id", async (req, res) => {
+  await Assignment.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted "});
+});
+
 const port = Number(process.env.PORT) || 3001;
 
 connectDB()
@@ -173,3 +178,4 @@ connectDB()
     console.error("❌ Failed to start server:", err.message);
     process.exit(1);
   });
+
