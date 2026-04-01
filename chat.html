@@ -3,8 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chat</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <title>Fullstack Chat</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Adding a little basic styling since we're here */
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 8px; margin-bottom: 5px; background: #f4f4f4; border-radius: 4px; }
+        #chat-container { max-width: 600px; margin: 20px auto; }
+        #chat-form { display: flex; margin-top: 10px; }
+        #message-input { flex-grow: 1; padding: 10px; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
@@ -12,32 +22,62 @@
         <ul id="messages"></ul>
         <form id="chat-form">
             <input id="message-input" autocomplete="off" placeholder="Type a message..." />
-            <button>Send</button>
+            <button type="submit">Send</button>
         </form>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <!-- helper log if backend is unreachable -->
     <script>
-        const socket = io("http://localhost:3000");
+        // 1. Connect to the server on port 3000 (Matches fixed server.js)
+        //    make sure the Node server is running separately (`node server.js` or
+        //    `npm run dev:server` from the root). Live Server cannot start the
+        //    backend, it only serves this static HTML file.
+        //    We use window.location.hostname so the page can work even if you
+        //    serve it from a different local port (e.g. Live Server at 5500).
+        const socket = io(`http://${window.location.hostname}:3000`);
+
         const form = document.getElementById('chat-form');
         const input = document.getElementById('message-input');
         const messages = document.getElementById('messages');
 
+        // 2. Define a room and a user (In a real app, these come from your login/URL)
+        const currentRoom = "general-room";
+        const currentUser = "User_" + Math.floor(Math.random() * 1000);
+
+        // log successful connection or failure
+        socket.on("connect", () => {
+            console.log("✅ Connected to chat server");
+            // 3. Join the room immediately on connect
+            socket.emit("joinConversation", currentRoom);
+        });
+        socket.on("connect_error", (err) => {
+            console.error("⚠️ Socket connection error:", err.message);
+            alert("Unable to connect to chat server. Make sure it is running on port 3000.");
+        });
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (input.value) {
-                // Sending the typed message to the server
-                socket.emit("message", input.value);
+                // 4. Send the structured object the database expects
+                socket.emit("sendMessage", {
+                    conversationId: currentRoom,
+                    sender: currentUser,
+                    text: input.value
+                });
                 input.value = '';
             }
         });
 
-        // Listening for the server's response
-        socket.on("response", (data) => {
+        // 5. Listen for the object coming back from the database
+        socket.on("newMessage", (message) => {
             const item = document.createElement('li');
-            item.textContent = data;
+            // Format: "User123: Hello world!"
+            item.textContent = `${message.sender}: ${message.text}`; 
             messages.appendChild(item);
-            // Auto-scroll to bottom
+            
+            // Auto-scroll to latest message
             window.scrollTo(0, document.body.scrollHeight);
         });
     </script>
