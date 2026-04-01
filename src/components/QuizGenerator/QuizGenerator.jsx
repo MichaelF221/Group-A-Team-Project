@@ -18,6 +18,7 @@ const QuizGenerator = () => {
     setError(null);
     
     try {
+      console.log("Generating quiz with config:", quizConfig);
       const response = await fetch('/api/generate-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,15 +36,22 @@ const QuizGenerator = () => {
         throw new Error(data.error || 'Failed to generate quiz');
       }
       
+      console.log("Received questions:", data);
+      
+      const questions = data.questions || data;
+      if (!questions || questions.length === 0) {
+        throw new Error("No questions were generated");
+      }
+      
       setQuizData({
         ...quizConfig,
-        questions: data
+        questions: questions
       });
       setUserAnswers(new Array(data.length).fill(null));
       setStep('taking');
     } catch (error) {
-      setError('Failed to generate quiz. Please try again.');
-      console.error(error);
+      console.error("Quiz generation error:", error);
+      setError(error.message || 'Failed to generate quiz. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -72,7 +80,7 @@ const QuizGenerator = () => {
 
       {error && (
         <div className="error-message">
-          {error}
+          <strong>Error:</strong> {error}
         </div>
       )}
 

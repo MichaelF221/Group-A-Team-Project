@@ -218,8 +218,9 @@ app.post("/api/generate-quiz", async (req, res) => {
       });
     }
     
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // Get the model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}". 
     

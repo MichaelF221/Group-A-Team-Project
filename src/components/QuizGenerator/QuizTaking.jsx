@@ -6,6 +6,10 @@ const QuizTaking = ({ quizData, onSubmit, onBack }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
 
+  if (!quizData || !quizData.questions || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
+    return <div style={{ color: 'white', padding: '2rem' }}>Loading quiz data...</div>;
+  }
+
   const handleAnswerSelect = (answer) => {
     const newAnswers = [...answers];
     newAnswers[currentQuestion] = answer;
