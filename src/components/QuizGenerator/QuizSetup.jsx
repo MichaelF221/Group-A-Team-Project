@@ -1,16 +1,25 @@
-// src/components/QuizGenerator/QuizSetup.jsx
+
+
+/**
+ * QuizSetup component for configuring quiz parameters before generation.
+ * Allows users to set topic, number of questions, and difficulty level.
+ */
 import React, { useState } from 'react';
 import './QuizGenerator.css';
 
 const QuizSetup = ({ onGenerate }) => {
+  // State for quiz configuration
   const [config, setConfig] = useState({
     topic: '',
     numQuestions: 10,
     difficulty: 'medium',
   });
 
+  // State for form validation errors
   const [errors, setErrors] = useState({});
 
+  
+//Validates the form inputs and sets error messages.
   const validateForm = () => {
     const newErrors = {};
     if (!config.topic.trim()) {
@@ -23,6 +32,7 @@ const QuizSetup = ({ onGenerate }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+//Handles form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
@@ -30,6 +40,8 @@ const QuizSetup = ({ onGenerate }) => {
     }
   };
 
+
+//Handles input changes and updates config state.
   const handleChange = (e) => {
     const { name, value } = e.target;
     setConfig(prev => ({
@@ -37,7 +49,7 @@ const QuizSetup = ({ onGenerate }) => {
       [name]: name === 'numQuestions' ? parseInt(value) : value
     }));
   };
-
+//Header section
   return (
     <div className="quiz-setup-container">
       <div className="setup-header">

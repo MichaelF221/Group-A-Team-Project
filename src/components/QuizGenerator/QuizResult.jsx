@@ -1,10 +1,16 @@
-// src/components/QuizGenerator/QuizResults.jsx
+
+//QuizResults component for displaying quiz results and explanations.
+//Shows score, correct/incorrect answers, and allows retaking or restarting.
 import React, { useState } from 'react';
 import './QuizGenerator.css';
 
 const QuizResults = ({ quizData, userAnswers, onRestart, onRetake }) => {
+  // State for which question explanation is expanded
   const [expandedQuestion, setExpandedQuestion] = useState(null);
 
+
+//Calculates the user's score and percentage.
+//returns Score object with correct, total, and percentage
   const calculateScore = () => {
     let correct = 0;
     quizData.questions.forEach((question, index) => {
@@ -21,7 +27,7 @@ const QuizResults = ({ quizData, userAnswers, onRestart, onRetake }) => {
   };
 
   const score = calculateScore();
-
+//sidebar with score summary
   return (
     <div className="quiz-results-container">
       <div className="results-sidebar">
