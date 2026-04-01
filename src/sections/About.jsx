@@ -3,7 +3,7 @@ export const About = () => {
 
     return(
 
-    <div className="flex items-center justify-center min-h-screen">
+    <div id="about" className="flex items-center justify-center min-h-screen">
         <div className="bg-zinc-800 rounded-2xl shadow-lg p-8 w-full max-w-lg">
            <h2 className="text-3xl font-bold text-orange-500 text-center mb-2">
         About Study Flow
