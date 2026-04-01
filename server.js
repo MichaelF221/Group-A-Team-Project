@@ -66,8 +66,27 @@ io.on("connection", (socket) => {
   });
 });
 
+app.post("/chat", async (req, res) => {
+  console.log("Request received!")
+  const { model, text } = req.body;
+  const response = await fetch("http://localhost:11434/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: text }],
+      stream: false,
+    }),
+  });
+  const data = await response.json();
+  console.log("Ollama response", data)
+  res.json(data);
+});
+
 // 3. SERVER PORT
 // Set to 3000 to match your chat.html connection string
 httpServer.listen(3000, () => {
-  console.log("🚀 Server is running on http://localhost:3000");
+  console.log("Server is running on http://localhost:3000");
 });
