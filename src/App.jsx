@@ -9,8 +9,14 @@ import Chatbot from "./Chatbot";
 import { CreateAccount } from "@/sections/CreateAccount";
 import Kanban from "@/sections/Kanban";
 import Account from "@/sections/Account";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import QuizSection from './sections/QuizSection';
 // import { useState } from "react";
+
+function ProtectedRoute({ children }) {
+  const isLoggedIn = Boolean(localStorage.getItem("studyflow_token"));
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
@@ -24,10 +30,32 @@ function App() {
         } />
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/kanban" element={<Kanban />} />
-        <Route path="/chatbot" element={<Chatbot />} />
+        <Route
+          path="/kanban"
+          element={
+            <ProtectedRoute>
+              <Kanban />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chatbot"
+          element={
+            <ProtectedRoute>
+              <Chatbot />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/about" element={<About />}/>
-        <Route path="/account" element={<Account />} />
+        <Route path="/quiz" element={<QuizSection />} />
       </Routes>
       <Footer />
     </div>

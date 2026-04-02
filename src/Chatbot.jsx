@@ -12,14 +12,15 @@ import { useState } from "react";
 
 // Hardcoded list of AI models users can choose from
 function Chatbot() {
+    const API_BASE = import.meta.env.VITE_API_URL || "/api";
     const models = [
+        "llama3.2:latest",
         "llama3.2",
         "gemini-3-flash-preview:cloud",
         "deepseek-v3.1:671b-cloud",
     ];
 
-    // Tracks which AI model the user has selected
-    const [model, setModel]= useState("llama3.2")
+    const [model, setModel]= useState(models[0])
     // Tracks what the user is typing in the input box
     const [text, setText] = useState("")
     // Stores the response returned from the AI to display on screen
@@ -28,16 +29,18 @@ function Chatbot() {
 
     // async function triggered when the user clicks "Send"
     const send = async () => {
-      // Logs the current model and text to the console for debugging
-       console.log("clicked!", model, text) // Sends a POST request to the backend with the selected model and user's text
-      const res = await fetch("http://localhost:3000/chat", {
+       console.log("clicked!", model, text)
+      if (!text.trim()) return;
+
+      const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: {"Content-Type": "application/json"}, // Tells the server we are sending JSON
         body: JSON.stringify({ model, text })
       })
+
       const data = await res.json()// Parses the backends JSON response into a JavaScript object
-      // Extracts the AI's message content and stores it in state, falls back to empty string if missing
-      setResponse(data.message?.content || "")
+      // Extracts the AI's message content and stores it in state, falls back to any error string if missing
+      setResponse(data.message?.content || data.error || "")
     };
 
     return (

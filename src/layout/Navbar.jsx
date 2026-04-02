@@ -8,8 +8,12 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "#features", label: "Features" },
   { href: "#contact", label: "Contact" },
+];
+
+const protectedNavLinks = [
   { href: "/kanban", label: "Kanban" },
   { href: "/chatbot", label: "Chatbot" },
+  { href: "/quiz", label: "Quiz" },
 ];
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,6 +50,8 @@ export const Navbar = () => {
     navigate("/");
   };
 
+  const visibleLinks = isLoggedIn ? [...navLinks, ...protectedNavLinks] : navLinks;
+
   return (
     <header className="fixed right-0 left-0 top-0 bg-transparent py-5 glass-strong z-50">
       <nav className="container mx-auto px-6 flex items-center justify-between">
@@ -56,7 +62,7 @@ export const Navbar = () => {
         {/* Deskttop Navigation Bar */}
         <div className="hidden md:flex items-center gap-1"> 
           <div className="glass rounded-full px-2 py-1 items-center gap-1"> {/* Loop through list */}
-             {navLinks.map((link) => (
+             {visibleLinks.map((link) => (
                <a href={link.href} key={link.href} className="text-muted-foreground hover:text-foreground text-sm px-4 py-2 rounded-full hover:bg-primary"
               >
                {link.label}
@@ -125,7 +131,7 @@ export const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden glass-strong">
           <div className="container mx-auto px-6 py-6 flex flex-col gap-3">
-          {navLinks.map((link) => (
+          {visibleLinks.map((link) => (
             <a
               href={link.href}
               key={link.href}
