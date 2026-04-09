@@ -7,7 +7,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 const navLinks = [
   { href: "/about", label: "About" },
   { href: "#features", label: "Features" },
-  { href: "#contact", label: "Contact" },
+  { href: "/chat.html", label: "Chatroom" },
 ];
 
 const protectedNavLinks = [

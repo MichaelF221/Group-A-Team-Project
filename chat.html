@@ -74,6 +74,10 @@
             padding: 32px 18px;
         }
 
+        .page-shell[hidden] {
+            display: none;
+        }
+
         .chat-layout {
             width: min(1080px, 100%);
             display: grid;
@@ -182,6 +186,53 @@
             min-height: 76vh;
             overflow: hidden;
             background: var(--surface-strong);
+        }
+
+        .auth-card {
+            width: min(560px, 100%);
+            padding: 32px;
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .auth-card h2 {
+            margin: 18px 0 10px;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            line-height: 1.05;
+        }
+
+        .auth-card p {
+            margin: 0 auto;
+            max-width: 34ch;
+            color: var(--muted-foreground);
+            line-height: 1.7;
+        }
+
+        .auth-actions {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .auth-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 54px;
+            padding: 0 24px;
+            border-radius: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--primary-foreground);
+            background: linear-gradient(135deg, #ef893c, #f4a261);
+            box-shadow: 0 14px 30px rgba(239, 137, 60, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .auth-actions a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(239, 137, 60, 0.34);
+            filter: brightness(1.02);
         }
 
         .chat-header {
@@ -418,7 +469,7 @@
     </style>
 </head>
 <body>
-    <main class="page-shell">
+    <main class="page-shell" id="chat-shell" hidden>
         <div class="chat-layout">
             <aside class="hero-card glass-panel">
                 <div class="eyebrow">Study Flow Live Chat</div>
@@ -468,81 +519,134 @@
         </div>
     </main>
 
+    <main class="page-shell" id="auth-shell" hidden>
+        <section class="auth-card glass-panel">
+            <div class="eyebrow">Study Flow Chat Access</div>
+            <h2>Log in to open the team chat.</h2>
+            <p id="auth-message">
+                Your Study Flow account is required before this shared chat room becomes available.
+            </p>
+            <div class="auth-actions">
+                <a href="/login">Go to Login</a>
+            </div>
+        </section>
+    </main>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        if (window.self !== window.top) {
+        const isEmbedded = window.self !== window.top;
+        if (isEmbedded) {
             document.body.classList.add("embedded");
         }
 
-        const chatServerUrl = window.location.origin;
-        const socket = io(chatServerUrl);
-
+        const chatShell = document.getElementById("chat-shell");
+        const authShell = document.getElementById("auth-shell");
         const form = document.getElementById("chat-form");
         const input = document.getElementById("message-input");
         const messages = document.getElementById("messages");
         const statusLabel = document.getElementById("status-label");
         const userLabel = document.getElementById("user-label");
+        const authMessage = document.getElementById("auth-message");
 
         const currentRoom = "general-room";
-        const currentUser = "User_" + Math.floor(Math.random() * 1000);
-
         document.getElementById("room-label").textContent = currentRoom;
-        userLabel.textContent = currentUser;
 
-        function appendMessage(message, isSelf = false) {
-            const item = document.createElement("li");
-            item.className = isSelf ? "self" : "";
+        function getStoredAuth() {
+            const token = localStorage.getItem("studyflow_token");
+            const storedUser = localStorage.getItem("studyflow_user");
 
-            const author = document.createElement("span");
-            author.className = "message-author";
-            author.textContent = message.sender;
+            if (!token || !storedUser) {
+                return null;
+            }
 
-            const body = document.createElement("span");
-            body.textContent = message.text;
+            try {
+                const user = JSON.parse(storedUser);
+                const displayName = user.fullName || user.email;
 
-            item.appendChild(author);
-            item.appendChild(body);
-            messages.appendChild(item);
-            messages.scrollTop = messages.scrollHeight;
+                if (!displayName) {
+                    return null;
+                }
+
+                return { token, user, displayName };
+            } catch {
+                return null;
+            }
         }
 
-        socket.on("connect", () => {
-            statusLabel.innerHTML = `<strong>Connected</strong> to ${chatServerUrl}`;
-            socket.emit("joinConversation", currentRoom);
-        });
+        const auth = getStoredAuth();
 
-        socket.on("connect_error", (err) => {
-            statusLabel.innerHTML = "<strong>Offline</strong> chat server unavailable";
-            console.error("Socket connection error:", err.message);
-            alert(`Unable to connect to chat server at ${chatServerUrl}. Make sure npm run one-link or the active server is running.`);
-        });
+        if (!auth) {
+            authShell.hidden = false;
 
-        form.addEventListener("submit", (e) => {
-            e.preventDefault();
+            if (isEmbedded) {
+                authMessage.textContent = "Log in from the main app to unlock the embedded team chat here.";
+            } else {
+                authMessage.textContent = "You need to log in before opening the standalone Study Flow chat page.";
+                window.location.replace("/login");
+            }
+        } else {
+            chatShell.hidden = false;
+            const chatServerUrl = window.location.origin;
+            const currentUser = auth.displayName;
+            const socket = io(chatServerUrl);
 
-            const text = input.value.trim();
-            if (!text) {
-                return;
+            userLabel.textContent = currentUser;
+
+            function appendMessage(message, isSelf = false) {
+                const item = document.createElement("li");
+                item.className = isSelf ? "self" : "";
+
+                const author = document.createElement("span");
+                author.className = "message-author";
+                author.textContent = message.sender;
+
+                const body = document.createElement("span");
+                body.textContent = message.text;
+
+                item.appendChild(author);
+                item.appendChild(body);
+                messages.appendChild(item);
+                messages.scrollTop = messages.scrollHeight;
             }
 
-            socket.emit("sendMessage", {
-                conversationId: currentRoom,
-                sender: currentUser,
-                text,
+            socket.on("connect", () => {
+                statusLabel.innerHTML = `<strong>Connected</strong> to ${chatServerUrl}`;
+                socket.emit("joinConversation", currentRoom);
             });
 
-            input.value = "";
-            input.focus();
-        });
+            socket.on("connect_error", (err) => {
+                statusLabel.innerHTML = "<strong>Offline</strong> chat server unavailable";
+                console.error("Socket connection error:", err.message);
+                alert(`Unable to connect to chat server at ${chatServerUrl}. Make sure npm run one-link or the active server is running.`);
+            });
 
-        socket.on("newMessage", (message) => {
-            const placeholder = messages.querySelector(".system");
-            if (placeholder) {
-                placeholder.remove();
-            }
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
 
-            appendMessage(message, message.sender === currentUser);
-        });
+                const text = input.value.trim();
+                if (!text) {
+                    return;
+                }
+
+                socket.emit("sendMessage", {
+                    conversationId: currentRoom,
+                    sender: currentUser,
+                    text,
+                });
+
+                input.value = "";
+                input.focus();
+            });
+
+            socket.on("newMessage", (message) => {
+                const placeholder = messages.querySelector(".system");
+                if (placeholder) {
+                    placeholder.remove();
+                }
+
+                appendMessage(message, message.sender === currentUser);
+            });
+        }
     </script>
 </body>
 </html>
