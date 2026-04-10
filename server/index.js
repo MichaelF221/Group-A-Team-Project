@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Message from "./models/Message.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
 const __filename = fileURLToPath(import.meta.url);
