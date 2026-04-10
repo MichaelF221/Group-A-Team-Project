@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai"; 
 import Message from "./models/Message.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,6 +26,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+// Gemini implementation
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function connectDB() {
@@ -112,7 +113,7 @@ function createSimpleToken(userId) {
   return Buffer.from(`${userId}:${Date.now()}:${randomBytes(8).toString("hex")}`).toString("base64url");
 }
 
-async function registerHandler(req, res) {
+app.post("/api/auth/register", async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
@@ -150,9 +151,9 @@ async function registerHandler(req, res) {
     console.error("Register error:", error.message);
     return res.status(500).json({ message: "Failed to create account." });
   }
-}
+});
 
-async function loginHandler(req, res) {
+app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -185,41 +186,24 @@ async function loginHandler(req, res) {
     console.error("Login error:", error.message);
     return res.status(500).json({ message: "Failed to log in." });
   }
-}
+});
 
-app.post("/api/auth/register", registerHandler);
-app.post("/auth/register", registerHandler);
-
-app.post("/api/auth/login", loginHandler);
-app.post("/auth/login", loginHandler);
-
-async function createAssignmentHandler(req, res) {
+app.post("/assignments", async (req, res) => {
   const assignment = await Assignment.create(req.body);
   res.status(201).json(assignment);
-}
+});
 
-async function listAssignmentsHandler(req, res) {
+app.get("/assignments", async (req, res) => {
   const assignments = await Assignment.find().sort({ dueDate: 1 });
   res.json(assignments);
-}
+});
 
-app.post("/api/assignments", createAssignmentHandler);
-app.post("/assignments", createAssignmentHandler);
-
-app.get("/api/assignments", listAssignmentsHandler);
-app.get("/assignments", listAssignmentsHandler);
-
-app.delete("/assignment/:id", async (req, res) => {
+app.delete("/assignment/:id", async (req, res) => { 
   await Assignment.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 });
 
-app.delete("/assigment/:id", async (req, res) => {
-  await Assignment.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
-});
-
-async function chatHandler(req, res) {
+app.post("/api/chat", async (req, res) => {
   const { model, text } = req.body;
 
   if (!text || !String(text).trim()) {
@@ -249,98 +233,120 @@ async function chatHandler(req, res) {
       error: "Chat request failed. Make sure Ollama is running on localhost:11434.",
     });
   }
-}
-
-app.post("/api/chat", chatHandler);
-app.post("/chat", chatHandler);
+});
 
 app.post("/api/generate-quiz", async (req, res) => {
   try {
-    const { topic, numQuestions, difficulty } = req.body;
-
+    const { topic, numQuestions, difficulty, questionType } = req.body;
+    
+    console.log(`Generating quiz: ${topic}, ${numQuestions} questions, ${difficulty} difficulty`);
+    
+    // Validates input
     if (!topic || !topic.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: "Topic is required",
+      return res.status(400).json({ 
+        success: false, 
+        error: "Topic is required" 
       });
     }
-
+    // number of question range between 1 and 50
     if (numQuestions < 1 || numQuestions > 50) {
-      return res.status(400).json({
-        success: false,
-        error: "Number of questions must be between 1 and 50",
+      return res.status(400).json({ 
+        success: false, 
+        error: "Number of questions must be between 1 and 50" 
       });
     }
-
+    
+    // Initialize Gemini AI with API key
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // API model
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-    const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}".
-
-Return the response as a valid JSON array with exactly ${numQuestions} questions using this structure:
-[
-  {
-    "id": 1,
-    "question": "Question text",
-    "options": ["option1", "option2", "option3", "option4"],
-    "correctAnswer": "correct option text (must match exactly one of the options)",
-    "explanation": "Brief explanation of why this answer is correct"
-  }
-]
-
-Important rules:
-- Make questions educational, accurate, and appropriate for ${difficulty} difficulty level
-- ${difficulty} difficulty means: easy = basic concepts, medium = intermediate understanding, hard = advanced/complex topics
-- Always provide exactly 4 options for each question
-- The correctAnswer must exactly match one of the options text
-- Make sure questions are varied and cover different aspects of "${topic}"
-- Return ONLY the JSON array, no other text, no markdown formatting`;
-
+    
+    // Create prompt for AI to generate questions
+    const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}". 
+    
+    Return the response as a valid JSON array with exactly ${numQuestions} questions using this structure:
+    [
+      {
+        "id": 1,
+        "question": "Question text",
+        "options": ["option1", "option2", "option3", "option4"],
+        "correctAnswer": "correct option text (must match exactly one of the options)",
+        "explanation": "Brief explanation of why this answer is correct"
+      }
+    ]
+    
+    Important rules:
+    - Make questions educational, accurate, and appropriate for ${difficulty} difficulty level
+    - ${difficulty} difficulty means: easy = basic concepts, medium = intermediate understanding, hard = advanced/complex topics
+    - Always provide exactly 4 options for each question
+    - The correctAnswer must exactly match one of the options text
+    - Make sure questions are varied and cover different aspects of "${topic}"
+    - Return ONLY the JSON array, no other text, no markdown formatting`;
+    
+    // Generate content using Gemini AI
     const result = await model.generateContent(prompt);
     const response = result.response.text();
-
+    
+    // Clean and parse the AI response
     let cleanedResponse = response.trim();
-
-    if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse.replace(/```json\n?/, "").replace(/```\n?$/, "");
-    } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse.replace(/```\n?/, "").replace(/```\n?$/, "");
+    
+    // Remove any markdown code blocks if present
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/```json\n?/, '').replace(/```\n?$/, '');
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/```\n?/, '').replace(/```\n?$/, '');
     }
-
+    
+    // Parse the cleaned response as JSON
     let questions;
     try {
       questions = JSON.parse(cleanedResponse);
-    } catch {
-      throw new Error("Invalid response format from Gemini");
+    } catch (parseError) {
+      throw new Error('Invalid response format from Gemini');
     }
-
+    
+    // Validate the response
     if (!Array.isArray(questions)) {
-      throw new Error("Response is not an array");
+      throw new Error('Response is not an array');
     }
-
-    if (questions.length > numQuestions) {
-      questions = questions.slice(0, numQuestions);
+    
+    // Adjust question count if needed
+    if (questions.length !== numQuestions) {
+      // Trim if too many
+      if (questions.length > numQuestions) {
+        questions = questions.slice(0, numQuestions);
+      }
     }
-
+    
+    // Ensure each question has required fields
     const validatedQuestions = questions.map((q, index) => ({
       id: index + 1,
       question: q.question || `Question ${index + 1}`,
       options: q.options && q.options.length === 4 ? q.options : ["Option 1", "Option 2", "Option 3", "Option 4"],
       correctAnswer: q.correctAnswer || q.options?.[0] || "Option 1",
-      explanation: q.explanation || "No explanation provided",
+      explanation: q.explanation || "No explanation provided"
     }));
-
+    
+    // Send successful response
     res.json({ success: true, questions: validatedQuestions });
+    
   } catch (error) {
-    console.error("Error generating quiz:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message || "Failed to generate quiz. Please try again.",
+    console.error('Error generating quiz:', error);
+    // Send error response
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to generate quiz. Please try again.'
     });
   }
 });
 
+// Test endpoint for quiz API
 app.get("/api/quiz-test", (req, res) => {
   res.json({ message: "Quiz API is working! Use POST /api/generate-quiz to generate quizzes." });
+});
+app.delete("/assigment/:id", async (req, res) => {
+  await Assignment.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted " });
 });
 
 const clientDistPath = path.join(__dirname, "..", "dist");

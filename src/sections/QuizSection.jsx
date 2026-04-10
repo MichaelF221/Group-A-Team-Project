@@ -3,9 +3,11 @@ import QuizGenerator from '../components/QuizGenerator/QuizGenerator';
 
 const QuizSection = () => {
   return (
-    <div className="quiz-section">
-      <QuizGenerator />
-    </div>
+    <section className="quiz-section w-full px-6 py-14 flex justify-center">
+      <div className="glass rounded-[28px] border border-border/60 p-8 w-full max-w-5xl mx-auto">
+        <QuizGenerator />
+      </div>
+    </section>
   );
 };
 
