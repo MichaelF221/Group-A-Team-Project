@@ -1,21 +1,25 @@
-// src/components/QuizGenerator/QuizTaking.jsx
 import React, { useState } from 'react';
 import './QuizGenerator.css';
 
 const QuizTaking = ({ quizData, onSubmit, onBack }) => {
+  // Current question index
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  // Array of selected answers
   const [answers, setAnswers] = useState([]);
 
+  // Safety check for quiz data
   if (!quizData || !quizData.questions || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
     return <div style={{ color: 'white', padding: '2rem' }}>Loading quiz data...</div>;
   }
 
+//Handles selecting an answer for the current question.
   const handleAnswerSelect = (answer) => {
     const newAnswers = [...answers];
     newAnswers[currentQuestion] = answer;
     setAnswers(newAnswers);
   };
 
+//Handles moving to next question or submitting quiz.
   const handleNext = () => {
     if (currentQuestion < quizData.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
@@ -30,9 +34,10 @@ const QuizTaking = ({ quizData, onSubmit, onBack }) => {
     }
   };
 
+  // Get current question and calculate progress
   const currentQ = quizData.questions[currentQuestion];
   const progress = ((currentQuestion + 1) / quizData.questions.length) * 100;
-
+//Sidebar with quiz info and progress
   return (
     <div className="quiz-taking-container">
       <div className="quiz-sidebar">
@@ -61,6 +66,7 @@ const QuizTaking = ({ quizData, onSubmit, onBack }) => {
         </button>
       </div>
 
+      {/* Main content area with question and options */}
       <div className="quiz-main-content">
         <div className="question-container">
           <h3 className="question-text">{currentQ.question}</h3>
@@ -84,6 +90,7 @@ const QuizTaking = ({ quizData, onSubmit, onBack }) => {
           </div>
         </div>
 
+        {/* Navigation buttons */}
         <div className="navigation-buttons">
           <button 
             onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}

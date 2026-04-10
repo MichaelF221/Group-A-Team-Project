@@ -26,7 +26,7 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
-// Initialize Gemini
+// Gemini implementation
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function connectDB() {
@@ -198,7 +198,7 @@ app.get("/api/assignments", async (req, res) => {
   res.json(assignments);
 });
 
-app.delete("/assignment/:id", async (req, res) => { // Fixed typo: assigment -> assignment
+app.delete("/assignment/:id", async (req, res) => { 
   await Assignment.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 });
@@ -241,14 +241,14 @@ app.post("/api/generate-quiz", async (req, res) => {
     
     console.log(`Generating quiz: ${topic}, ${numQuestions} questions, ${difficulty} difficulty`);
     
-    // Validate input
+    // Validates input
     if (!topic || !topic.trim()) {
       return res.status(400).json({ 
         success: false, 
         error: "Topic is required" 
       });
     }
-    
+    // number of question range between 1 and 50
     if (numQuestions < 1 || numQuestions > 50) {
       return res.status(400).json({ 
         success: false, 
@@ -256,10 +256,12 @@ app.post("/api/generate-quiz", async (req, res) => {
       });
     }
     
+    // Initialize Gemini AI with API key
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Get the model
+    // API model
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
+    // Create prompt for AI to generate questions
     const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}". 
     
     Return the response as a valid JSON array with exactly ${numQuestions} questions using this structure:
@@ -281,10 +283,11 @@ app.post("/api/generate-quiz", async (req, res) => {
     - Make sure questions are varied and cover different aspects of "${topic}"
     - Return ONLY the JSON array, no other text, no markdown formatting`;
     
+    // Generate content using Gemini AI
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     
-    // Clean and parse the response
+    // Clean and parse the AI response
     let cleanedResponse = response.trim();
     
     // Remove any markdown code blocks if present
@@ -294,11 +297,11 @@ app.post("/api/generate-quiz", async (req, res) => {
       cleanedResponse = cleanedResponse.replace(/```\n?/, '').replace(/```\n?$/, '');
     }
     
+    // Parse the cleaned response as JSON
     let questions;
     try {
       questions = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      console.error('Failed to parse response:', cleanedResponse);
       throw new Error('Invalid response format from Gemini');
     }
     
@@ -307,9 +310,9 @@ app.post("/api/generate-quiz", async (req, res) => {
       throw new Error('Response is not an array');
     }
     
+    // Adjust question count if needed
     if (questions.length !== numQuestions) {
-      console.warn(`Expected ${numQuestions} questions, got ${questions.length}. Adjusting...`);
-      // Trim or pad as needed
+      // Trim if too many
       if (questions.length > numQuestions) {
         questions = questions.slice(0, numQuestions);
       }
@@ -324,10 +327,12 @@ app.post("/api/generate-quiz", async (req, res) => {
       explanation: q.explanation || "No explanation provided"
     }));
     
+    // Send successful response
     res.json({ success: true, questions: validatedQuestions });
     
   } catch (error) {
     console.error('Error generating quiz:', error);
+    // Send error response
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Failed to generate quiz. Please try again.'

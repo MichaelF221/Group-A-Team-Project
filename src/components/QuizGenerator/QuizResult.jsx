@@ -1,27 +1,35 @@
-// src/components/QuizGenerator/QuizResults.jsx
+// QuizResults component for displaying quiz results and explanations.
+// Shows score, correct/incorrect answers, and allows retaking or restarting.
 import React, { useState } from 'react';
 import './QuizGenerator.css';
 
 const QuizResults = ({ quizData, userAnswers, onRestart, onRetake }) => {
+  // State for which question explanation is expanded
   const [expandedQuestion, setExpandedQuestion] = useState(null);
 
+  // Calculates the user's score and percentage.
+  // Returns a score object with correct, total, and percentage.
   const calculateScore = () => {
     let correct = 0;
+
     quizData.questions.forEach((question, index) => {
       const userAnswer = userAnswers[index];
+
       if (userAnswer && userAnswer.toLowerCase() === question.correctAnswer.toLowerCase()) {
         correct++;
       }
     });
+
     return {
       correct,
       total: quizData.questions.length,
-      percentage: Math.round((correct / quizData.questions.length) * 100)
+      percentage: Math.round((correct / quizData.questions.length) * 100),
     };
   };
 
   const score = calculateScore();
 
+  // Sidebar with score summary
   return (
     <div className="quiz-results-container">
       <div className="results-sidebar">
@@ -29,12 +37,12 @@ const QuizResults = ({ quizData, userAnswers, onRestart, onRetake }) => {
           <h2>Quiz Results</h2>
           <p className="quiz-topic">{quizData.topic}</p>
         </div>
-        
+
         <div className="score-circle">
           <div className="score-percentage">{score.percentage}%</div>
           <div className="score-label">Score</div>
         </div>
-        
+
         <div className="score-details">
           <p className="score-stats">
             You got {score.correct} out of {score.total} correct
@@ -56,31 +64,25 @@ const QuizResults = ({ quizData, userAnswers, onRestart, onRetake }) => {
         <div className="questions-list">
           {quizData.questions.map((question, idx) => {
             const isCorrect = userAnswers[idx]?.toLowerCase() === question.correctAnswer.toLowerCase();
-            
+
             return (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}
                 onClick={() => setExpandedQuestion(expandedQuestion === idx ? null : idx)}
               >
                 <div className="review-header">
-                  <div className="question-status">
-                    {isCorrect ? '✓' : '✗'}
-                  </div>
-                  <div className="question-number">
-                    Question {idx + 1}
-                  </div>
-                  <div className="expand-icon">
-                    {expandedQuestion === idx ? '▲' : '▼'}
-                  </div>
+                  <div className="question-status">{isCorrect ? 'OK' : 'X'}</div>
+                  <div className="question-number">Question {idx + 1}</div>
+                  <div className="expand-icon">{expandedQuestion === idx ? '-' : '+'}</div>
                 </div>
-                
+
                 <div className="question-preview">
-                  {question.question.length > 100 
-                    ? question.question.substring(0, 100) + '...' 
+                  {question.question.length > 100
+                    ? `${question.question.substring(0, 100)}...`
                     : question.question}
                 </div>
-                
+
                 {expandedQuestion === idx && (
                   <div className="review-details">
                     <div className="answer-row">

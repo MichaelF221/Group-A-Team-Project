@@ -1,4 +1,4 @@
-// src/components/QuizGenerator/LoadingSpinner.jsx
+//Shows a spinner animation and loading message.
 import React from 'react';
 import './QuizGenerator.css';
 
