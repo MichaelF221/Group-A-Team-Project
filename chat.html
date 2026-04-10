@@ -250,6 +250,12 @@
             gap: 14px;
         }
 
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .chat-avatar {
             width: 52px;
             height: 52px;
@@ -274,6 +280,26 @@
         .status strong {
             color: var(--primary);
             font-weight: 600;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--foreground);
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.04);
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .back-link:hover {
+            transform: translateY(-1px);
+            border-color: rgba(239, 137, 60, 0.4);
+            background: rgba(239, 137, 60, 0.08);
         }
 
         #messages {
@@ -420,6 +446,16 @@
                 flex-direction: column;
             }
 
+            .chat-header-actions {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .back-link {
+                width: 100%;
+            }
+
             #messages li {
                 max-width: 88%;
             }
@@ -504,7 +540,10 @@
                             <p>Shared room for fast updates and study support</p>
                         </div>
                     </div>
-                    <p class="status" id="status-label"><strong>Connecting</strong> to chat server...</p>
+                    <div class="chat-header-actions">
+                        <a class="back-link" href="/">Back to Home</a>
+                        <p class="status" id="status-label"><strong>Connecting</strong> to chat server...</p>
+                    </div>
                 </header>
 
                 <ul id="messages">
