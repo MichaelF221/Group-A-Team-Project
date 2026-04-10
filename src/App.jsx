@@ -3,7 +3,6 @@ import { Footer } from "@/layout/Footer";
 import { Hero } from "@/sections/Hero";
 import { About } from "@/sections/About";
 import { Features } from "@/sections/Features";
-import { Contact } from "@/sections/Contact";
 import { Login } from "@/sections/Login";
 import Chatbot from "./Chatbot"; 
 import { CreateAccount } from "@/sections/CreateAccount";
