@@ -11,7 +11,6 @@ import { fileURLToPath } from "url";
 import Message from "./models/Message.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, ".env") });
@@ -189,13 +188,12 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-
-app.post("/assignments", async (req, res) => {
+app.post("/api/assignments", async (req, res) => {
   const assignment = await Assignment.create(req.body);
   res.status(201).json(assignment);
 });
 
-app.get("/assignments", async (req, res) => {
+app.get("/api/assignments", async (req, res) => {
   const assignments = await Assignment.find().sort({ dueDate: 1 });
   res.json(assignments);
 });
@@ -345,10 +343,6 @@ app.post("/api/generate-quiz", async (req, res) => {
 // Test endpoint for quiz API
 app.get("/api/quiz-test", (req, res) => {
   res.json({ message: "Quiz API is working! Use POST /api/generate-quiz to generate quizzes." });
-});
-app.delete("/assigment/:id", async (req, res) => {
-  await Assignment.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted " });
 });
 
 const clientDistPath = path.join(__dirname, "..", "dist");
