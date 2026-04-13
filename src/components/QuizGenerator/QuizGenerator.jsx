@@ -19,6 +19,8 @@ const QuizGenerator = () => {
 
   
   const handleGenerateQuiz = async (quizConfig) => {
+    const requestStartedAt = Date.now();
+    const MIN_LOADING_MS = 550;
     setLoading(true);
     setError(null);
     
@@ -37,7 +39,10 @@ const QuizGenerator = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate quiz');
+        const fallbackMessage = response.status === 503
+          ? 'Quiz service is busy right now. Please try again in a few seconds.'
+          : 'Failed to generate quiz';
+        throw new Error(data.error || fallbackMessage);
       }
       
       const questions = data.questions || data;
@@ -54,6 +59,11 @@ const QuizGenerator = () => {
     } catch (error) {
       setError(error.message || 'Failed to generate quiz. Please try again.');
     } finally {
+      const elapsed = Date.now() - requestStartedAt;
+      const remaining = MIN_LOADING_MS - elapsed;
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
       setLoading(false);
     }
   };
@@ -93,8 +103,8 @@ const QuizGenerator = () => {
       )}
 
       {/* Quiz setup form */}
-      {step === 'setup' && !loading && (
-        <QuizSetup onGenerate={handleGenerateQuiz} />
+      {step === 'setup' && (
+        <QuizSetup onGenerate={handleGenerateQuiz} isGenerating={loading} />
       )}
 
       {/* Quiz taking interface shown after generation */}

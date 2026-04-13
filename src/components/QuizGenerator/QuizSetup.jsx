@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import './QuizGenerator.css';
 
-const QuizSetup = ({ onGenerate }) => {
+const QuizSetup = ({ onGenerate, isGenerating = false }) => {
   // State for quiz configuration
   const [config, setConfig] = useState({
     topic: '',
@@ -97,8 +97,8 @@ const QuizSetup = ({ onGenerate }) => {
           </div>
         </div>
 
-        <button type="submit" className="generate-btn">
-          Generate Quiz
+        <button type="submit" className="generate-btn" disabled={isGenerating}>
+          {isGenerating ? 'Generating...' : 'Generate Quiz'}
         </button>
       </form>
     </div>

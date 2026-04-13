@@ -258,8 +258,6 @@ app.post("/api/generate-quiz", async (req, res) => {
     
     // Initialize Gemini AI with API key
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // API model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     // Create prompt for AI to generate questions
     const prompt = `Generate ${numQuestions} ${difficulty} difficulty multiple choice questions about "${topic}". 
@@ -283,9 +281,46 @@ app.post("/api/generate-quiz", async (req, res) => {
     - Make sure questions are varied and cover different aspects of "${topic}"
     - Return ONLY the JSON array, no other text, no markdown formatting`;
     
-    // Generate content using Gemini AI
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    // Generate content with retry/fallback for temporary model overload.
+    const configuredModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const fallbackModel = process.env.GEMINI_FALLBACK_MODEL;
+    const candidateModels = fallbackModel
+      ? [configuredModel, fallbackModel]
+      : [configuredModel];
+
+    let response;
+    let lastError;
+
+    for (const modelName of candidateModels) {
+      const geminiModel = genAI.getGenerativeModel({ model: modelName });
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const result = await geminiModel.generateContent(prompt);
+          response = result.response.text();
+          break;
+        } catch (err) {
+          lastError = err;
+          const errorText = String(err?.message || "");
+          const isTemporaryModelLoadIssue = /503|high demand|resource_exhausted|429/i.test(errorText);
+
+          if (isTemporaryModelLoadIssue && attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 650 * attempt));
+            continue;
+          }
+
+          if (!isTemporaryModelLoadIssue) {
+            throw err;
+          }
+        }
+      }
+
+      if (response) break;
+    }
+
+    if (!response) {
+      throw lastError || new Error("Gemini did not return a response.");
+    }
     
     // Clean and parse the AI response
     let cleanedResponse = response.trim();
@@ -332,10 +367,15 @@ app.post("/api/generate-quiz", async (req, res) => {
     
   } catch (error) {
     console.error('Error generating quiz:', error);
+    const errorMessage = String(error?.message || "Failed to generate quiz. Please try again.");
+    const isTemporaryModelLoadIssue = /503|high demand|resource_exhausted|429/i.test(errorMessage);
+
     // Send error response
-    res.status(500).json({ 
+    res.status(isTemporaryModelLoadIssue ? 503 : 500).json({
       success: false, 
-      error: error.message || 'Failed to generate quiz. Please try again.'
+      error: isTemporaryModelLoadIssue
+        ? "Quiz service is temporarily busy. Please try again in a few seconds."
+        : errorMessage
     });
   }
 });
