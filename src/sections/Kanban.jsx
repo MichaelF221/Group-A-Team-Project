@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Kanban(){
 
@@ -6,20 +6,20 @@ function Kanban(){
       todo: {
         name: "Todo",
         items:[
-          {id: "1", content: "Research"},
-          {id: "2", content: "IT Projects"}
+          // {id: "1", content: "Research"},
+          // {id: "2", content: "IT Projects"}
         ],
       },
       inProgress: {
         name: "In Progress",
         items:[
-          {id: "3", content: "Software Engineering"},
+          // {id: "3", content: "Software Engineering"},
         ],
       },
       done: {
          name: "Done",
         items:[
-          {id: "4", content: "Set up repository"},
+          // {id: "4", content: "Set up repository"},
         ],
       },
     });
@@ -28,19 +28,38 @@ function Kanban(){
     const [activeColumns, setActiveColumn] = useState("todo");
     const [draggedItem, setDraggedItem] = useState(null);
 
-    const addNewTask = () => {
-      if(newTask.trim() === "") return;
-
-      const updatedColumns = {... columns};
-
-      updatedColumns[activeColumns].items.push({
-        id: Date.now().toString(),
-        content: newTask,
+    useEffect(() => {
+      fetch("/api/assignments")
+      .then(res => res.json())
+      .then(data => {
+        const updated = {
+          todo: { name: "Todo", items: [] },
+          inProgress: { name: "In Progress", items: [] },
+          done: { name: "Done", items: [] }
+        };
+        data.forEach(a => {
+          if (updated[a.status]) {
+            updated[a.status].items.push({ id: a._id, content: a.title });
+          }
+        });
+        setColumns(updated);
       });
+    }, []);
 
-      setColumns(updatedColumns);
-      setNewTask("");
-    };
+
+    const addNewTask = async () => {
+  if(newTask.trim() === "") return;
+  const res = await fetch("/api/assignments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: newTask, status: activeColumns, dueDate: new Date() })
+  });
+  const a = await res.json();
+  const updatedColumns = {...columns};
+  updatedColumns[activeColumns].items.push({ id: a._id, content: a.title });
+  setColumns(updatedColumns);
+  setNewTask("");
+};
 
     const removeTask = (columnId, taskId) => {
         const updatedColumns = {... columns};

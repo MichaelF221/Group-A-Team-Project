@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { Login } from "@/components/LoginButton";
 import { CreateAccount } from "@/components/CreateAccountButton";
-import { Circle, LogOut, Menu, User } from "lucide-react";
+import { Circle, LogOut, Menu, Settings, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const navLinks = [
   { href: "/about", label: "About" },
   { href: "#features", label: "Features" },
-  { href: "#contact", label: "Contact" },
+  { href: "/chat.html", label: "Chatroom" },
+];
+
+const protectedNavLinks = [
   { href: "/kanban", label: "Kanban" },
   { href: "/chatbot", label: "Chatbot" },
+  { href: "/quiz", label: "Quiz" },
 ];
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -46,6 +50,8 @@ export const Navbar = () => {
     navigate("/");
   };
 
+  const visibleLinks = isLoggedIn ? [...navLinks, ...protectedNavLinks] : navLinks;
+
   return (
     <header className="fixed right-0 left-0 top-0 bg-transparent py-5 glass-strong z-50">
       <nav className="container mx-auto px-6 flex items-center justify-between">
@@ -56,7 +62,7 @@ export const Navbar = () => {
         {/* Deskttop Navigation Bar */}
         <div className="hidden md:flex items-center gap-1"> 
           <div className="glass rounded-full px-2 py-1 items-center gap-1"> {/* Loop through list */}
-             {navLinks.map((link) => (
+             {visibleLinks.map((link) => (
                <a href={link.href} key={link.href} className="text-muted-foreground hover:text-foreground text-sm px-4 py-2 rounded-full hover:bg-primary"
               >
                {link.label}
@@ -88,6 +94,14 @@ export const Navbar = () => {
                      </button>
                      {isUserMenuOpen && (
                        <div className="absolute right-0 mt-2 w-36 rounded-lg glass-strong border border-border p-2">
+                         <Link
+                           to="/account"
+                           onClick={() => setIsUserMenuOpen(false)}
+                           className="mb-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition hover:bg-primary/20"
+                         >
+                           <Settings size={16} />
+                           <span>Account</span>
+                         </Link>
                          <button
                            onClick={handleSignOut}
                            className="w-full flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-primary/20 transition text-left"
@@ -117,7 +131,7 @@ export const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden glass-strong">
           <div className="container mx-auto px-6 py-6 flex flex-col gap-3">
-          {navLinks.map((link) => (
+          {visibleLinks.map((link) => (
             <a
               href={link.href}
               key={link.href}
@@ -139,6 +153,14 @@ export const Navbar = () => {
                   <Circle size={10} className="text-green-500 fill-green-500" />
                   <span>You're logged in</span>
                 </div>
+                <Link
+                  to="/account"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-primary/20 transition"
+                >
+                  <Settings size={16} />
+                  <span>Account</span>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-primary/20 transition"
