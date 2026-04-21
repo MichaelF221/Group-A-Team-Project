@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Message from "./models/Message.js";
+import { registerChatHandlers } from "./chatHandlers.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,31 +44,7 @@ app.get("/health", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
-
-  socket.on("joinConversation", (conversationId) => {
-    socket.join(conversationId);
-    console.log(`User ${socket.id} joined room: ${conversationId}`);
-  });
-
-  socket.on("sendMessage", async (data) => {
-    const { conversationId, sender, text } = data;
-
-    try {
-      const message = await Message.create({
-        conversationId,
-        sender,
-        text,
-      });
-
-      io.to(conversationId).emit("newMessage", message);
-    } catch (error) {
-      console.error("Error saving message:", error.message);
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+  registerChatHandlers(io, socket, Message);
 });
 
 const AssignmentSchema = new mongoose.Schema(

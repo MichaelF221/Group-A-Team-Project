@@ -666,7 +666,11 @@
                 if (!text) {
                     return;
                 }
-
+                console.log("WB6 test", {
+    conversationId: currentRoom,
+    sender: currentUser,
+    text,
+});
                 socket.emit("sendMessage", {
                     conversationId: currentRoom,
                     sender: currentUser,

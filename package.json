@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "dev:client": "vite",
-    "dev:chat": "node server.js",
+    "dev:chat": "npm --prefix server run dev",
     "dev:server": "npm --prefix server run dev",
     "dev:all": "sh -c 'npm run dev:server & npm run dev:client & wait'",
     "one-link": "npm run build && npm --prefix server run start",
+    "uplink": "npm run one-link",
     "build": "vite build",
+    "test": "vitest run --config vitest.config.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -31,6 +33,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -38,6 +43,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "vite": "^7.3.1"
+    "jsdom": "^26.1.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.1.4"
   }
 }
