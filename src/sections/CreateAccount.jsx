@@ -17,6 +17,11 @@ export const CreateAccount = () => {
 
     setErrorMessage("");
 
+    if (!fullName.trim() || !email.trim() || !password) {
+      setErrorMessage("Full name, email and password are required.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
@@ -54,7 +59,7 @@ export const CreateAccount = () => {
           <h1 className="text-3xl font-bold text-center mb-2">Create Account</h1>
           <p className="text-muted-foreground text-center mb-8">Sign up to start your study journey</p>
           
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium mb-2">Full Name</label>
               <input
@@ -63,7 +68,6 @@ export const CreateAccount = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                required
               />
             </div>
 
@@ -75,7 +79,6 @@ export const CreateAccount = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                required
               />
             </div>
 
@@ -87,7 +90,6 @@ export const CreateAccount = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                required
               />
             </div>
 
@@ -99,7 +101,6 @@ export const CreateAccount = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition"
-                required
               />
             </div>
 
@@ -109,6 +110,7 @@ export const CreateAccount = () => {
 
             <button
               type="submit"
+              formNoValidate
               disabled={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition"
             >

@@ -368,14 +368,20 @@ app.post("/api/generate-quiz", async (req, res) => {
   } catch (error) {
     console.error('Error generating quiz:', error);
     const errorMessage = String(error?.message || "Failed to generate quiz. Please try again.");
-    const isTemporaryModelLoadIssue = /503|high demand|resource_exhausted|429/i.test(errorMessage);
+    const errorStatus = Number(error?.status || 0);
+    const isTemporaryModelLoadIssue =
+      errorStatus === 503 ||
+      /503|high demand|resource_exhausted/i.test(errorMessage);
 
     // Send error response
-    res.status(isTemporaryModelLoadIssue ? 503 : 500).json({
+    const responseStatus = isQuotaOrRateLimit ? 429 : isTemporaryModelLoadIssue ? 503 : 500;
+    res.status(responseStatus).json({
       success: false, 
-      error: isTemporaryModelLoadIssue
-        ? "Quiz service is temporarily busy. Please try again in a few seconds."
-        : errorMessage
+      error: isQuotaOrRateLimit
+        ? "Gemini API quota/rate limit reached for this key. Check Google AI Studio billing/quotas or wait for reset, then try again."
+        : isTemporaryModelLoadIssue
+          ? "Quiz service is temporarily busy. Please try again in a few seconds."
+          : errorMessage
     });
   }
 });

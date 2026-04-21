@@ -40,7 +40,7 @@ const QuizGenerator = () => {
       
       if (!response.ok) {
         const fallbackMessage = response.status === 503
-          ? 'Quiz service is busy right now. Please try again in a few seconds.'
+          ? 'Quiz service is busy right now. Please try again in a few seconds.(try new API)'
           : 'Failed to generate quiz';
         throw new Error(data.error || fallbackMessage);
       }

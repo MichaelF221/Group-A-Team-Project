@@ -23,9 +23,11 @@ export const Login = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers?.get?.("content-type") || "";
+      const isJson = contentType.toLowerCase().includes("application/json");
+      const data = isJson ? await response.json() : null;
       if (!response.ok) {
-        setErrorMessage(data.message || "Login failed.");
+        setErrorMessage(data?.message || "Login failed.");
         return;
       }
 
