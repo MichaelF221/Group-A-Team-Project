@@ -13,8 +13,8 @@ export const About = () => {
 
         <div className="border-t border-zinc-600 my-4" />
         <p className="text-white text-justify leading-relaxed">
-          Study low is a productivity platform designed for students. Manage your
-          tasks and projects with our Kanban board, get instant answers from or AI
+          Study Flow is a productivity platform designed for students. Manage your
+          tasks and projects with our Kanban board, get instant answers from our AI
           Chatbot, and stay on top of your studies all in one place.
         </p>
 
